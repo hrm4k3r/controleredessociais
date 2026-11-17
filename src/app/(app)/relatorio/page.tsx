@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function Relatorio({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const week = weekParam(sp);
+  const env = /^\d+-\d+-\d+$/.test(one(sp.env) ?? "") ? one(sp.env)!.split("-") : null;
   const sb = await createClient();
   const { data: clients } = await sb.from("clients").select("id,name,is_internal").eq("active", true).order("sort");
   const list = clients ?? [];
@@ -25,7 +26,7 @@ export default async function Relatorio({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-5">
       <h1 className="page-title">Relatório do cliente (Stories 1080×1920)</h1>
-      <Flash ok={okParam(sp)} />
+      <Flash ok={okParam(sp)} text={env ? `Envio concluído: ${env[0]} enviado(s), ${env[1]} em modo teste (nada saiu), ${env[2]} com erro.` : undefined} />
       <div className="flex flex-wrap items-center gap-3">
         <WeekBar path="/relatorio" week={week} extra={{ cliente: clientId }} />
         <form method="get" className="flex items-center gap-2">
