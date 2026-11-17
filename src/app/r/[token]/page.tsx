@@ -12,7 +12,7 @@ export default async function RelatorioPublico({ params }: { params: Promise<{ t
   const report = await reportByToken(token);
   if (!report) notFound();
   return (
-    <main className="min-h-screen bg-navy px-3 py-5 text-white">
+    <main className="min-h-screen bg-[#1f2a44] px-3 py-5 text-white">
       <div className="mx-auto max-w-[480px] space-y-4">
         <div className="text-center">
           <p className="text-sm text-slate-300">{report.client.name}</p>

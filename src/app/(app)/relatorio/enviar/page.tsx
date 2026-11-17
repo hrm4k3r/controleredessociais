@@ -39,7 +39,7 @@ export default async function Enviar({ searchParams }: { searchParams: Promise<R
         <div className="label">Assunto</div>
         <p className="font-semibold">{mail.subject}</p>
         <div className="label pt-2">Mensagem (pré-visualização)</div>
-        <iframe title="Pré-visualização do e-mail" srcDoc={mail.html} sandbox="" className="h-[420px] w-full rounded-lg border border-line bg-white" />
+        <iframe title="Pré-visualização do e-mail" srcDoc={mail.html} sandbox="" className="h-[420px] w-full rounded-lg border border-line bg-surface" />
         <p className="text-sm text-slate-600">Anexo: <b>relatorio-{week}.png</b> (1080×1920). O link para o celular é gerado no envio.</p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`/api/relatorio/${clientId}/${week}`} alt="Anexo" width={1080} height={1920} className="w-48 rounded-lg border border-line" />

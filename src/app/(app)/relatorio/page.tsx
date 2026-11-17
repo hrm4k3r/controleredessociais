@@ -39,7 +39,7 @@ export default async function Relatorio({ searchParams }: { searchParams: Promis
       <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
         <div className="space-y-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={key} src={`${img}?v=${key}`} alt="Pré-visualização do relatório" width={1080} height={1920} className="w-full rounded-xl border border-line bg-white shadow" />
+          <img key={key} src={`${img}?v=${key}`} alt="Pré-visualização do relatório" width={1080} height={1920} className="w-full rounded-xl border border-line bg-surface shadow" />
           <a href={`${img}?baixar=1`} className="btn w-full">Baixar PNG</a>
         </div>
         <div className="space-y-4">

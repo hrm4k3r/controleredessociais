@@ -63,7 +63,7 @@ export default function PostForm({ action, clients, accountsByClient, formats, t
         <div className="flex flex-wrap gap-2">
           {nets.length === 0 && <span className="text-sm text-slate-500">Este cliente não tem contas cadastradas.</span>}
           {nets.map((n) => (
-            <label key={n} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${sel.includes(n) ? "border-green-600 bg-green-50 font-semibold text-green-800" : "border-line bg-white"}`}>
+            <label key={n} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${sel.includes(n) ? "border-green-600 bg-green-50 font-semibold text-green-800" : "border-line bg-surface"}`}>
               <input type="checkbox" name="net" value={n} checked={sel.includes(n)} onChange={() => toggle(n)} className="h-4 w-4" />
               {n}
             </label>

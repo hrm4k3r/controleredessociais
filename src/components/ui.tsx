@@ -24,7 +24,7 @@ export function WeekBar({ path, week, extra = {} }: { path: string; week: string
     <form method="get" action={path} className="flex flex-wrap items-center gap-2">
       {Object.entries(extra).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       <Link href={href(addDays(week, -7))} className="btn btn-ghost" aria-label="Semana anterior">←</Link>
-      <div className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-navy">Semana {fmtPeriodo(week)}</div>
+      <div className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-navy">Semana {fmtPeriodo(week)}</div>
       <Link href={href(addDays(week, 7))} className="btn btn-ghost" aria-label="Próxima semana">→</Link>
       <input type="date" name="semana" defaultValue={week} className="input !w-auto" aria-label="Ir para a semana da data" />
       <button className="btn btn-ghost">Ir</button>
