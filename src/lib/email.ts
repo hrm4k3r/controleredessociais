@@ -46,6 +46,7 @@ export async function sendReport(sb: SupabaseClient, opts: { clientId: string; w
   const { mode, reason } = emailMode();
   const png = mode === "live" ? await renderReportPng(report) : null;
   const resend = mode === "live" ? new Resend(process.env.RESEND_API_KEY) : null;
+  const { data: cl } = await sb.from("clients").select("organization_id").eq("id", opts.clientId).single();
   const results: SendResult[] = [];
   for (const recipient of opts.recipients) {
     let r: SendResult;
@@ -66,7 +67,7 @@ export async function sendReport(sb: SupabaseClient, opts: { clientId: string; w
     }
     results.push(r);
     await sb.from("email_log").insert({
-      client_id: opts.clientId, week_start: opts.week, recipient, status: r.status,
+      organization_id: cl?.organization_id, client_id: opts.clientId, week_start: opts.week, recipient, status: r.status,
       detail: r.status === "enviado" ? null : r.detail ?? null, provider_id: r.status === "enviado" ? r.detail ?? null : null, trigger: opts.trigger,
     });
   }

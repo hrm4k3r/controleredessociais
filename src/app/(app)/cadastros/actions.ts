@@ -66,7 +66,8 @@ export async function addListItem(fd: FormData) {
   const label = textField(fd.get("label"));
   if (!label || !["network", "format", "theme"].includes(kind)) done();
   const { data: last } = await sb.from("list_items").select("sort").eq("kind", kind).order("sort", { ascending: false }).limit(1);
-  fail((await sb.from("list_items").upsert({ kind, label, sort: (last?.[0]?.sort ?? 0) + 1 }, { onConflict: "kind,label", ignoreDuplicates: true })).error);
+  const { error } = await sb.from("list_items").insert({ kind, label, sort: (last?.[0]?.sort ?? 0) + 1 });
+  if (error && error.code !== "23505") fail(error); // 23505 = item já existe
   done();
 }
 

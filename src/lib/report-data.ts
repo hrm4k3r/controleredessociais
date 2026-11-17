@@ -18,7 +18,9 @@ export async function ensureToken(sb: SupabaseClient, clientId: string, week: st
   const { data } = await sb.from("weekly_notes").select("public_token").eq("client_id", clientId).eq("week_start", week).maybeSingle();
   if (data?.public_token) return data.public_token as string;
   const token = newToken();
-  const { error } = await sb.from("weekly_notes").upsert({ client_id: clientId, week_start: week, public_token: token, updated_at: new Date().toISOString() }, { onConflict: "client_id,week_start" });
+  // organization_id explícito: no cron (service role) não há auth.uid() para o default
+  const { data: cl } = await sb.from("clients").select("organization_id").eq("id", clientId).single();
+  const { error } = await sb.from("weekly_notes").upsert({ organization_id: cl?.organization_id, client_id: clientId, week_start: week, public_token: token, updated_at: new Date().toISOString() }, { onConflict: "client_id,week_start" });
   if (error) throw new Error(error.message);
   return token;
 }
