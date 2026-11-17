@@ -97,6 +97,7 @@ create table public.client_finance (                 -- cadastro financeiro (só
 create table public.payments (                       -- controle mensal (ref_month = dia 1 do mês)
   client_id uuid not null references public.clients(id) on delete cascade,
   ref_month date not null,
+  amount_due numeric(12,2) check (amount_due >= 0), -- valor devido no mês (se vazio, usa o valor mensal atual do cadastro)
   paid_date date,
   paid_amount numeric(12,2) check (paid_amount >= 0),
   notes text,

@@ -11,3 +11,6 @@ export const DEFAULT_THEMES = [
 export type Verdict = "Repetir" | "Adaptar" | "Na média" | "Poucos dados";
 export type GoalLevel = "green" | "yellow" | "red" | "none";
 export type PaymentStatus = "Pago" | "Pago com atraso" | "Parcial" | "A vencer" | "Atrasado" | "Sem cadastro";
+
+/** Primeiro mês do controle financeiro (o sistema passa a valer em nov/2026). */
+export const FINANCE_START_MONTH = "2026-11-01";
