@@ -1,0 +1,197 @@
+import { ImageResponse } from "next/og";
+import fs from "node:fs";
+import path from "node:path";
+import { fmtPeriodo } from "./dates";
+import { goalText } from "./calc";
+import type { NetworkRow, ReportData, ResultRow } from "./aggregate";
+
+export const REPORT_W = 1080;
+export const REPORT_H = 1920;
+
+const C = {
+  navy: "#1f2a44", navy2: "#2b3a5e", accent: "#e8590c", bg: "#eef1f6", card: "#ffffff", text: "#1b2437", muted: "#64708a", line: "#dde2ec",
+  green: "#16a34a", greenBg: "#dcfce7", yellow: "#ca8a04", yellowBg: "#fef3c7", red: "#dc2626", redBg: "#fee2e2", grayBg: "#e5e7eb",
+};
+
+let fontCache: { name: string; data: Buffer; weight: 400 | 600 | 800; style: "normal" }[] | null = null;
+function fonts() {
+  if (!fontCache) {
+    const dir = path.join(process.cwd(), "src/assets/fonts");
+    const f = (w: 400 | 600 | 800) => ({ name: "Inter", data: fs.readFileSync(path.join(dir, `inter-latin-${w}-normal.woff`)), weight: w, style: "normal" as const });
+    fontCache = [f(400), f(600), f(800)];
+  }
+  return fontCache;
+}
+
+const int = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR"));
+const pct = (v: number | null | undefined, d = 1) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}%`);
+const dpct = (v: number | null | undefined) => (v == null ? null : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v * 100))}%`);
+const dint = (v: number | null | undefined) => (v == null ? null : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("pt-BR")}`);
+const tone = (v: number | null | undefined) => (v == null || v === 0 ? C.muted : v > 0 ? C.green : C.red);
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+
+function levelColors(level: string) {
+  return level === "green" ? { fg: C.green, bg: C.greenBg } : level === "yellow" ? { fg: C.yellow, bg: C.yellowBg } : level === "red" ? { fg: C.red, bg: C.redBg } : { fg: C.muted, bg: C.grayBg };
+}
+const verdictColors = (v: string | null) => (v === "Repetir" ? { fg: C.green, bg: C.greenBg } : v === "Adaptar" ? { fg: C.red, bg: C.redBg } : v === "Poucos dados" ? { fg: C.yellow, bg: C.yellowBg } : { fg: C.muted, bg: C.grayBg });
+
+export function Chip({ text, fg, bg, size = 26 }: { text: string; fg: string; bg: string; size?: number }) {
+  return <div style={{ display: "flex", background: bg, color: fg, fontSize: size, fontWeight: 800, padding: "6px 18px", borderRadius: 999 }}>{text}</div>;
+}
+
+export function Metric({ label, value, sub, subColor, big = 40, w }: { label: string; value: string; sub?: string | null; subColor?: string; big?: number; w?: number }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", ...(w ? { width: w } : { flexGrow: 1 }) }}>
+      <div style={{ fontSize: 21, color: C.muted, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: big, fontWeight: 800, color: C.text, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 23, fontWeight: 800, color: subColor ?? C.muted, height: 26 }}>{sub ?? " "}</div>
+    </div>
+  );
+}
+
+export function NetworkCard({ n }: { n: NetworkRow }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", background: C.card, borderRadius: 26, padding: "20px 30px", gap: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 38, fontWeight: 800, color: C.navy }}>{n.network}</div>
+        <div style={{ display: "flex", fontSize: 26, color: C.muted, fontWeight: 600 }}>{`${n.posts} ${n.posts === 1 ? "post" : "posts"}${n.hasData ? ` · eng. ${pct(n.engagement)}` : ""}`}</div>
+      </div>
+      {n.hasData ? (
+        <div style={{ display: "flex", gap: 14 }}>
+          <Metric label="Seguidores" value={int(n.followers)} sub={n.newFollowers != null ? `${dint(n.newFollowers)} na semana` : null} subColor={tone(n.newFollowers)} />
+          <Metric label="Visualizações" value={int(n.views)} sub={n.viewsVar != null ? `${dpct(n.viewsVar)} vs. anterior` : null} subColor={tone(n.viewsVar)} />
+          <Metric label="Alcance" value={int(n.reach)} />
+          <Metric label="Interações" value={int(n.interactions)} />
+        </div>
+      ) : (
+        <div style={{ fontSize: 26, color: C.muted }}>Sem números lançados nesta semana</div>
+      )}
+    </div>
+  );
+}
+
+export function NetworkRowCompact({ n }: { n: NetworkRow }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", background: C.card, borderRadius: 20, padding: "6px 26px", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 250 }}>
+        <div style={{ fontSize: 30, fontWeight: 800, color: C.navy }}>{n.network === "Google Meu Negócio" ? "Google" : n.network}</div>
+        <div style={{ fontSize: 21, color: C.muted, fontWeight: 600 }}>{`${n.posts} ${n.posts === 1 ? "post" : "posts"}`}</div>
+      </div>
+      {n.hasData ? (
+        <>
+          <Metric w={190} label="Seguidores" value={int(n.followers)} sub={dint(n.newFollowers)} subColor={tone(n.newFollowers)} big={30} />
+          <Metric w={210} label="Visualizações" value={int(n.views)} sub={dpct(n.viewsVar)} subColor={tone(n.viewsVar)} big={30} />
+          <Metric w={170} label="Alcance" value={int(n.reach)} big={30} />
+          <Metric label="Engaj." value={pct(n.engagement)} big={30} />
+        </>
+      ) : (
+        <div style={{ fontSize: 24, color: C.muted }}>Sem números nesta semana</div>
+      )}
+    </div>
+  );
+}
+
+export function PostRow({ r, rank, dense = false }: { r: ResultRow; rank: string; dense?: boolean }) {
+  const v = verdictColors(r.verdict);
+  return (
+    <div style={{ display: "flex", alignItems: "center", background: C.card, borderRadius: 24, padding: dense ? "8px 26px" : "14px 26px", gap: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 60, height: 60, borderRadius: 30, background: C.navy, color: "#fff", fontSize: 32, fontWeight: 800 }}>{rank}</div>
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, gap: 2 }}>
+        <div style={{ fontSize: 30, fontWeight: 800, color: C.navy }}>{`${r.network} · ${r.post.format ?? "Post"}`}</div>
+        {!dense && <div style={{ fontSize: 24, color: C.muted, fontWeight: 600 }}>{clip(r.post.summary ?? "", 46)}</div>}
+        <div style={{ fontSize: 26, color: C.text, fontWeight: 600 }}>
+          {`${int(r.result?.reach)} alcance · ${int(r.interactions)} interações · ${pct(r.rate)}`}
+        </div>
+      </div>
+      {r.verdict && <Chip text={r.verdict} fg={v.fg} bg={v.bg} size={24} />}
+    </div>
+  );
+}
+
+export function SectionTitle({ text }: { text: string }) {
+  return <div style={{ display: "flex", fontSize: 27, fontWeight: 800, color: C.accent, letterSpacing: "1.5px", textTransform: "uppercase" }}>{text}</div>;
+}
+
+export function ReportImage({ data }: { data: ReportData }) {
+  const { client, summary: s, networks, top, adapt } = data;
+  const lv = levelColors(s.level);
+  const compact = networks.length > 2;
+  const dense = networks.length > 3;
+  const comment = clip(data.comment.trim(), dense ? 150 : compact ? 170 : 230);
+  const steps = clip(data.nextSteps.trim(), dense ? 130 : compact ? 150 : 200);
+  const pctW = Math.min(100, Math.round((s.pct ?? 0) * 100));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", width: REPORT_W, height: REPORT_H, background: C.bg, fontFamily: "Inter", color: C.text }}>
+      {/* Cabeçalho */}
+      <div style={{ display: "flex", flexDirection: "column", background: C.navy, padding: "44px 60px 28px", gap: 4 }}>
+        <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: C.accent, letterSpacing: "4px" }}>RELATÓRIO SEMANAL · REDES SOCIAIS</div>
+        <div style={{ display: "flex", fontSize: client.name.length > 22 ? 60 : 72, fontWeight: 800, color: "#fff", lineHeight: 1.05 }}>{client.name}</div>
+        <div style={{ display: "flex", fontSize: 34, color: "#c9d3ea", fontWeight: 600 }}>{`Semana de ${fmtPeriodo(data.week)}`}</div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: "22px 48px 24px", gap: 12, overflow: "hidden" }}>
+        {/* Meta */}
+        <div style={{ display: "flex", flexDirection: "column", background: C.card, borderRadius: 26, padding: "18px 32px", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <SectionTitle text="Meta de postagens" />
+            <Chip text={goalText(s.done, s.goal)} fg={lv.fg} bg={lv.bg} size={26} />
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+            <div style={{ fontSize: 68, fontWeight: 800, color: C.navy, lineHeight: 1 }}>{String(s.done)}</div>
+            <div style={{ display: "flex", fontSize: 34, fontWeight: 600, color: C.muted }}>{`de ${s.goal} posts publicados${s.pct != null ? ` · ${Math.round(s.pct * 100)}%` : ""}`}</div>
+          </div>
+          <div style={{ display: "flex", height: 20, background: C.line, borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ display: "flex", width: `${pctW}%`, height: 20, background: lv.fg, borderRadius: 10 }} />
+          </div>
+        </div>
+
+        {/* Números por rede */}
+        <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 12 }}>
+          <SectionTitle text="Números por rede" />
+          {networks.map((n) => (compact ? <NetworkRowCompact key={n.network} n={n} /> : <NetworkCard key={n.network} n={n} />))}
+        </div>
+
+        {/* Top 3 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <SectionTitle text="Posts que mais engajaram" />
+          {top.length === 0 && <div style={{ display: "flex", fontSize: 26, color: C.muted }}>Resultados dos posts ainda não lançados.</div>}
+          {top.map((r, i) => <PostRow key={r.post.id + r.network} r={r} rank={`${i + 1}º`} dense={dense} />)}
+        </div>
+
+        {/* Adaptar */}
+        {adapt && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <SectionTitle text="Post para adaptar" />
+            <PostRow r={adapt} rank="↓" dense={dense} />
+          </div>
+        )}
+
+        {/* Comentário e próximos passos */}
+        {(comment || steps) && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, flexGrow: 1, overflow: "hidden" }}>
+            {comment && (
+              <div style={{ display: "flex", flexDirection: "column", background: C.navy, borderRadius: 22, padding: dense ? "14px 26px" : "18px 28px", gap: 4 }}>
+                <div style={{ display: "flex", fontSize: 24, fontWeight: 800, color: C.accent, letterSpacing: "2px" }}>COMENTÁRIO DA SEMANA</div>
+                <div style={{ display: "flex", fontSize: dense ? 26 : 28, color: "#fff", fontWeight: 600, lineHeight: 1.25 }}>{comment}</div>
+              </div>
+            )}
+            {steps && (
+              <div style={{ display: "flex", flexDirection: "column", background: C.accent, borderRadius: 22, padding: dense ? "14px 26px" : "18px 28px", gap: 4 }}>
+                <div style={{ display: "flex", fontSize: 24, fontWeight: 800, color: "#ffe8d6", letterSpacing: "2px" }}>PRÓXIMOS PASSOS</div>
+                <div style={{ display: "flex", fontSize: dense ? 26 : 28, color: "#fff", fontWeight: 600, lineHeight: 1.25 }}>{steps}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function renderReportImage(data: ReportData): ImageResponse {
+  return new ImageResponse(<ReportImage data={data} />, { width: REPORT_W, height: REPORT_H, fonts: fonts() });
+}
+
+export async function renderReportPng(data: ReportData): Promise<Buffer> {
+  return Buffer.from(await renderReportImage(data).arrayBuffer());
+}
