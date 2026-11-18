@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { one, ok as okParam, weekParam } from "@/lib/params";
@@ -49,7 +50,7 @@ export default async function Relatorio({ searchParams }: { searchParams: Promis
             <h2 className="font-bold text-navy">Texto da semana</h2>
             <div><label className="label">Comentário da semana</label><textarea name="comment" rows={4} maxLength={600} defaultValue={note?.comment ?? ""} className="input !bg-yellow-50" /></div>
             <div><label className="label">Próximos passos</label><textarea name="next_steps" rows={3} maxLength={500} defaultValue={note?.next_steps ?? ""} className="input !bg-yellow-50" /></div>
-            <button className="btn btn-accent">Salvar e atualizar imagem</button>
+            <SubmitButton className="btn btn-accent">Salvar e atualizar imagem</SubmitButton>
             <p className="text-xs text-slate-500">Textos longos são resumidos na imagem para caber no formato Stories. Dados vêm de Postagens, Métricas e Resultados.</p>
           </form>
 
@@ -60,11 +61,11 @@ export default async function Relatorio({ searchParams }: { searchParams: Promis
                 <input readOnly value={link} className="input" />
                 <div className="flex flex-wrap gap-2">
                   <a href={link} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">Abrir</a>
-                  <form action={regenerateLink}><input type="hidden" name="client_id" value={clientId} /><input type="hidden" name="week" value={week} /><button className="btn btn-ghost">Gerar novo link (invalida o atual)</button></form>
+                  <form action={regenerateLink}><input type="hidden" name="client_id" value={clientId} /><input type="hidden" name="week" value={week} /><SubmitButton className="btn btn-ghost">Gerar novo link (invalida o atual)</SubmitButton></form>
                 </div>
               </>
             ) : (
-              <form action={createLink}><input type="hidden" name="client_id" value={clientId} /><input type="hidden" name="week" value={week} /><button className="btn">Gerar link público</button></form>
+              <form action={createLink}><input type="hidden" name="client_id" value={clientId} /><input type="hidden" name="week" value={week} /><SubmitButton className="btn">Gerar link público</SubmitButton></form>
             )}
             <p className="text-xs text-slate-500">Link somente leitura com código difícil de adivinhar; mostra só este relatório (sem financeiro nem outros clientes).</p>
           </div>

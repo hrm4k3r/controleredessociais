@@ -1,5 +1,7 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import DateInput from "@/components/DateInput";
 import { addMonths, firstOfMonth, fmtData, fmtMes, isValidISO, todayISO } from "@/lib/dates";
 import { one, ok as okParam } from "@/lib/params";
 import { brl } from "@/lib/finance";
@@ -79,7 +81,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
                       <td className="td font-medium"><input type="hidden" name="id" value={c.id} />{c.name}</td>
                       <td className="td whitespace-nowrap">{fmtData(inp.due)}</td>
                       <td className="td num">{brl(inp.amountDue)}</td>
-                      <td className="td"><input type="date" name={`data|${c.id}`} defaultValue={pay?.paid_date ?? ""} className="input !w-40 !bg-yellow-50" /></td>
+                      <td className="td"><DateInput name={`data|${c.id}`} defaultValue={pay?.paid_date ?? ""} className="input !w-40 !bg-yellow-50" /></td>
                       <td className="td"><input name={`pago|${c.id}`} inputMode="decimal" defaultValue={pay?.paid_amount != null ? String(pay.paid_amount).replace(".", ",") : ""} className="input !w-32 !bg-yellow-50 text-right" /></td>
                       <td className="td"><span className={`badge ${ST[st]}`}>{st}</span></td>
                       <td className="td"><input name={`obs|${c.id}`} defaultValue={pay?.notes ?? ""} className="input !min-w-48 !bg-yellow-50" /></td>
@@ -89,7 +91,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
               </tbody>
             </table>
           </div>
-          <button className="btn btn-accent">Salvar pagamentos de {fmtMes(mes)}</button>
+          <SubmitButton className="btn btn-accent">Salvar pagamentos de {fmtMes(mes)}</SubmitButton>
         </form>
       </section>
 
@@ -106,7 +108,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
             </div>
           ))}
           <p className="text-xs text-slate-500">Se o dia não existe no mês (ex.: 31 em fevereiro), vale o último dia do mês. A Rixxer (conta própria) não entra no financeiro. Alterar o valor vale para meses ainda sem pagamento lançado.</p>
-          <button className="btn">Salvar cadastro</button>
+          <SubmitButton className="btn">Salvar cadastro</SubmitButton>
         </form>
       </section>
     </div>

@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import { signIn } from "./actions";
 
 export default async function Login({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
@@ -20,7 +21,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <label className="label" htmlFor="password">Senha</label>
           <input id="password" name="password" type="password" required autoComplete="current-password" className="input" />
         </div>
-        <button className="btn w-full">Entrar</button>
+        <SubmitButton className="btn w-full" pendingText="Entrando…">Entrar</SubmitButton>
       </form>
       </div>
     </main>

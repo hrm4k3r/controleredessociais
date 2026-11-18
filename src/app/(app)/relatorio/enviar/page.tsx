@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -54,7 +55,7 @@ export default async function Enviar({ searchParams }: { searchParams: Promise<R
           <label key={e.email as string} className="flex items-center gap-2 text-sm"><input type="checkbox" name="to" value={e.email as string} defaultChecked className="h-4 w-4" /> {e.name ? `${e.name} · ` : ""}{e.email as string}</label>
         ))}
         <label className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm font-medium"><input type="checkbox" name="confirmo" className="h-4 w-4" /> Conferi a pré-visualização e confirmo o envio.</label>
-        <button className="btn btn-accent" disabled={(emails ?? []).length === 0}>{mode === "live" ? "Enviar relatório agora" : "Simular envio (modo teste)"}</button>
+        <SubmitButton className="btn btn-accent" disabled={(emails ?? []).length === 0} pendingText="Enviando…">{mode === "live" ? "Enviar relatório agora" : "Simular envio (modo teste)"}</SubmitButton>
       </form>
     </div>
   );

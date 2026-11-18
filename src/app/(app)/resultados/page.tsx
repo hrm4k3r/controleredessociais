@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { loadDataset } from "@/lib/data";
@@ -74,7 +75,7 @@ export default async function Resultados({ searchParams }: { searchParams: Promi
             </tbody>
           </table>
         </div>
-        {rows.length > 0 && <div className="sticky bottom-3 mt-4 flex justify-end"><button className="btn btn-accent shadow-lg">Salvar resultados</button></div>}
+        {rows.length > 0 && <div className="sticky bottom-3 mt-4 flex justify-end"><SubmitButton className="btn btn-accent shadow-lg">Salvar resultados</SubmitButton></div>}
       </form>
       <p className="text-xs text-slate-500">Interações = curtidas + comentários + compartilhamentos + salvamentos. Engajamento = interações ÷ alcance. Ranking: por conta (cliente + rede) na semana. Veredito vs. média histórica da conta: Repetir ≥120%, Adaptar ≤80%, “Poucos dados” com menos de 3 posts com resultado. Salve para atualizar os cálculos.</p>
     </div>

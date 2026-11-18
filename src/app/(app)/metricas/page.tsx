@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { loadDataset } from "@/lib/data";
 import { addDays, fmtData, weekEnd } from "@/lib/dates";
@@ -69,7 +70,7 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
             </section>
           );
         })}
-        <div className="sticky bottom-3 flex justify-end"><button className="btn btn-accent shadow-lg">Salvar métricas da semana</button></div>
+        <div className="sticky bottom-3 flex justify-end"><SubmitButton className="btn btn-accent shadow-lg">Salvar métricas da semana</SubmitButton></div>
       </form>
       <p className="text-xs text-slate-500">Campos vazios ficam sem dado. “Novos seguidores” = seguidores desta semana − da semana anterior (aparece quando as duas existem). Engajamento = interações ÷ alcance.</p>
     </div>

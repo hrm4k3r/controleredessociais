@@ -1,5 +1,7 @@
 "use client";
+import SubmitButton from "@/components/SubmitButton";
 import { useState } from "react";
+import DateInput from "@/components/DateInput";
 import { STATUSES } from "@/lib/constants";
 
 type Props = {
@@ -25,7 +27,7 @@ export default function PostForm({ action, clients, accountsByClient, formats, t
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="label">Data</label>
-          <input type="date" name="post_date" required defaultValue={initial?.post_date ?? today} className="input" />
+          <DateInput name="post_date" required defaultValue={initial?.post_date ?? today} />
         </div>
         <div>
           <label className="label">Cliente</label>
@@ -81,7 +83,7 @@ export default function PostForm({ action, clients, accountsByClient, formats, t
           <input name="notes" defaultValue={initial?.notes ?? ""} className="input" />
         </div>
       </div>
-      <button className="btn btn-accent">{submitLabel}</button>
+      <SubmitButton className="btn btn-accent">{submitLabel}</SubmitButton>
     </form>
   );
 }

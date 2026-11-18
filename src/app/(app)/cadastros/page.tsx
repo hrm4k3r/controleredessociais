@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { loadLists } from "@/lib/data";
 import { ErrorBox, Flash } from "@/components/ui";
@@ -36,13 +37,13 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
               <div><label className="label">Meta/semana</label><input name={`goal|${c.id}`} type="number" min={0} defaultValue={c.weekly_goal} className="input !bg-yellow-50" /></div>
             </div>
           ))}
-          <button className="btn">Salvar clientes</button>
+          <SubmitButton className="btn">Salvar clientes</SubmitButton>
         </form>
         <form action={addClient} className="flex flex-wrap items-end gap-3 border-t border-line pt-3">
           <div><label className="label">Novo cliente</label><input name="name" required className="input" /></div>
           <div><label className="label">Meta/semana</label><input name="goal" type="number" min={0} defaultValue={2} className="input !w-28" /></div>
           <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" name="internal" /> Conta própria</label>
-          <button className="btn btn-ghost">Adicionar</button>
+          <SubmitButton className="btn btn-ghost">Adicionar</SubmitButton>
         </form>
       </section>
 
@@ -57,7 +58,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
               {lists.networks.map((n) => (
                 <label key={n} className="flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-sm"><input type="checkbox" name="net" value={n} defaultChecked={have.has(n)} /> {n}</label>
               ))}
-              <button className="btn btn-ghost ml-auto">Salvar</button>
+              <SubmitButton className="btn btn-ghost ml-auto">Salvar</SubmitButton>
             </form>
           );
         })}
@@ -82,7 +83,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
               <input type="hidden" name="client_id" value={c.id} />
               <input name="email" type="email" required placeholder="email@cliente.com.br" className="input !w-64" />
               <input name="name" placeholder="Nome (opcional)" className="input !w-48" />
-              <button className="btn btn-ghost">Adicionar</button>
+              <SubmitButton className="btn btn-ghost">Adicionar</SubmitButton>
             </form>
           </div>
         ))}
@@ -105,7 +106,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
                   </li>
                 ))}
               </ul>
-              <form action={addListItem} className="flex gap-2"><input type="hidden" name="kind" value={kind} /><input name="label" required className="input" placeholder="Novo item" /><button className="btn btn-ghost">+</button></form>
+              <form action={addListItem} className="flex gap-2"><input type="hidden" name="kind" value={kind} /><input name="label" required className="input" placeholder="Novo item" /><SubmitButton className="btn btn-ghost" pendingText="…">+</SubmitButton></form>
             </div>
           ))}
         </div>

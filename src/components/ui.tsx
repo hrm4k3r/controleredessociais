@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { GoalLevel, Verdict } from "@/lib/constants";
+import DateInput from "@/components/DateInput";
 import { addDays, fmtPeriodo } from "@/lib/dates";
 
 export function Flash({ ok, text = "Salvo com sucesso." }: { ok?: boolean; text?: string }) {
@@ -26,7 +27,7 @@ export function WeekBar({ path, week, extra = {} }: { path: string; week: string
       <Link href={href(addDays(week, -7))} className="btn btn-ghost" aria-label="Semana anterior">←</Link>
       <div className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-navy">Semana {fmtPeriodo(week)}</div>
       <Link href={href(addDays(week, 7))} className="btn btn-ghost" aria-label="Próxima semana">→</Link>
-      <input type="date" name="semana" defaultValue={week} className="input !w-auto" aria-label="Ir para a semana da data" />
+      <DateInput name="semana" defaultValue={week} className="input !w-36" ariaLabel="Ir para a semana da data" />
       <button className="btn btn-ghost">Ir</button>
     </form>
   );

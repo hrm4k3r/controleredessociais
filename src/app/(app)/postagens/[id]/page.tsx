@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -25,7 +26,7 @@ export default async function EditarPost({ params }: { params: Promise<{ id: str
       <form action={deletePost} className="card flex items-center justify-between">
         <input type="hidden" name="id" value={id} />
         <span className="text-sm text-slate-600">Excluir este post apaga também os resultados lançados nele.</span>
-        <button className="btn btn-danger">Excluir post</button>
+        <SubmitButton className="btn btn-danger" pendingText="Excluindo…">Excluir post</SubmitButton>
       </form>
     </div>
   );
