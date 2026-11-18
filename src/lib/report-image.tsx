@@ -8,7 +8,7 @@ import type { NetworkRow, ReportData, ResultRow } from "./aggregate";
 export const REPORT_W = 1080;
 export const REPORT_H = 1920;
 
-const C = {
+export const C = {
   navy: "#1f2a44", navy2: "#2b3a5e", accent: "#e8590c", bg: "#eef1f6", card: "#ffffff", text: "#1b2437", muted: "#64708a", line: "#dde2ec",
   green: "#16a34a", greenBg: "#dcfce7", yellow: "#ca8a04", yellowBg: "#fef3c7", red: "#dc2626", redBg: "#fee2e2", grayBg: "#e5e7eb",
 };
@@ -21,7 +21,7 @@ export function NetDot({ network, size = 44 }: { network: string; size?: number 
 const MEDAL = ["#f5b301", "#9aa5b8", "#c9773c"];
 
 let fontCache: { name: string; data: Buffer; weight: 400 | 600 | 800; style: "normal" }[] | null = null;
-function fonts() {
+export function fonts() {
   if (!fontCache) {
     const dir = path.join(process.cwd(), "src/assets/fonts");
     const f = (w: 400 | 600 | 800) => ({ name: "Inter", data: fs.readFileSync(path.join(dir, `inter-latin-${w}-normal.woff`)), weight: w, style: "normal" as const });
@@ -30,12 +30,12 @@ function fonts() {
   return fontCache;
 }
 
-const int = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR"));
-const pct = (v: number | null | undefined, d = 1) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}%`);
+export const int = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR"));
+export const pct = (v: number | null | undefined, d = 1) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}%`);
 const dpct = (v: number | null | undefined) => (v == null ? null : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v * 100))}%`);
 const dint = (v: number | null | undefined) => (v == null ? null : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("pt-BR")}`);
 const tone = (v: number | null | undefined) => (v == null || v === 0 ? C.muted : v > 0 ? C.green : C.red);
-const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+export const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 
 function levelColors(level: string) {
   return level === "green" ? { fg: C.green, bg: C.greenBg } : level === "yellow" ? { fg: C.yellow, bg: C.yellowBg } : level === "red" ? { fg: C.red, bg: C.redBg } : { fg: C.muted, bg: C.grayBg };
