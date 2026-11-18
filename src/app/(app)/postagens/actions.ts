@@ -34,7 +34,7 @@ export async function savePost(fd: FormData) {
     if (error) throw new Error(error.message);
   }
   revalidatePath("/", "layout");
-  redirect(`/postagens?semana=${weekStart(post_date)}&cliente=${client_id}&ok=1`);
+  redirect(`/postagens?semana=${weekStart(post_date)}&ok=1`);
 }
 
 export async function deletePost(fd: FormData) {
@@ -44,4 +44,13 @@ export async function deletePost(fd: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/", "layout");
   redirect("/postagens?ok=1");
+}
+
+export async function updatePostStatus(id: string, status: string): Promise<{ ok: boolean; error?: string }> {
+  if (!(STATUSES as readonly string[]).includes(status)) return { ok: false, error: "Status inválido." };
+  const sb = await createClient();
+  const { error } = await sb.from("posts").update({ status }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

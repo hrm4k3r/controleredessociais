@@ -5,12 +5,8 @@ import { diaSemana, fmtDiaMes, todayISO, weekEnd } from "@/lib/dates";
 import { one, ok as okParam, weekParam } from "@/lib/params";
 import { Flash, WeekBar } from "@/components/ui";
 import PostForm from "@/components/PostForm";
+import StatusSelect from "@/components/StatusSelect";
 import { savePost } from "./actions";
-
-const STATUS_CLS: Record<string, string> = {
-  Postado: "bg-green-100 text-green-800", "Não postado": "bg-red-100 text-red-800",
-  Agendado: "bg-yellow-100 text-yellow-800", Planejado: "bg-blue-100 text-blue-800",
-};
 
 export default async function Postagens({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
@@ -53,18 +49,18 @@ export default async function Postagens({ searchParams }: { searchParams: Promis
 
       <div className="card overflow-x-auto !p-0">
         <table className="w-full min-w-[820px]">
-          <thead><tr>{["Data", "Cliente", "Status", "Formato", "Tema", "Redes", "Resumo", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+          <thead><tr>{["Data", "Cliente", "Formato", "Tema", "Redes", "Resumo", "Status", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
           <tbody>
             {posts.length === 0 && <tr><td className="td text-slate-500" colSpan={8}>Nenhum post nesta semana{clientFilter ? " para este cliente" : ""}.</td></tr>}
             {posts.map((p) => (
               <tr key={p.id} className="hover:bg-orange-50/40">
                 <td className="td whitespace-nowrap">{diaSemana(p.post_date)} {fmtDiaMes(p.post_date)}</td>
                 <td className="td font-medium">{nameOf.get(p.client_id)}</td>
-                <td className="td"><span className={`badge ${STATUS_CLS[p.status] ?? ""}`}>{p.status}</span></td>
                 <td className="td">{p.format ?? "—"}</td>
                 <td className="td">{p.theme ?? "—"}</td>
                 <td className="td">{netsOf(p.id).join(", ") || <span className="text-red-600">nenhuma</span>}</td>
                 <td className="td max-w-xs truncate" title={p.summary ?? ""}>{p.summary}</td>
+                <td className="td"><StatusSelect id={p.id} status={p.status} /></td>
                 <td className="td whitespace-nowrap">
                   {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" className="mr-3 text-accent underline">link</a>}
                   <Link href={`/postagens/${p.id}`} className="font-semibold text-navy underline">editar</Link>
