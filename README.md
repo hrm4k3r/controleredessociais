@@ -86,11 +86,23 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
 - **Ranking:** por conta na semana (engajamento); relatório usa o ranking do cliente (todas as redes).
 - **Financeiro:** Pago, Pago com atraso, Parcial, A vencer, Atrasado; vencimento em dia inexistente → último dia do mês; cliente é INADIMPLENTE se há parcela vencida em aberto.
 
+## Multi-agência (organizações)
+
+Cada tabela de negócio tem `organization_id` e a RLS isola os dados por organização: um usuário só lê/escreve
+o que pertence a uma organização da qual é membro (`organization_members`, papéis `owner | admin | colaborador`).
+
+- O **primeiro usuário** criado no Supabase vira `owner` da primeira organização (criada no seed) por um trigger.
+- Usuários seguintes **não** entram em nenhuma organização sozinhos: inclua-os em `organization_members`
+  (SQL Editor) com o `organization_id` e o `user_id` desejados; sem isso eles não enxergam dados.
+- Permissões finas por papel/cliente ainda não existem (previstas para uma migração futura).
+
 ## Segurança
 
-Login por e-mail/senha (Supabase Auth, sem cadastro público); `proxy.ts` bloqueia todas as rotas sem sessão, exceto `/login`,
-`/r/<token>` (relatório público, somente leitura, token aleatório de 192 bits, sem financeiro nem outros clientes) e o cron (segredo próprio).
-RLS ligado em todas as tabelas: só `authenticated` lê/escreve.
+Login por e-mail/senha (Supabase Auth, sem cadastro público); `proxy.ts` bloqueia todas as rotas sem sessão, exceto
+`/login`, `/setup` (só útil quando faltam as variáveis do Supabase), `/r/<token>` (relatório público, somente leitura,
+token aleatório de 192 bits, sem financeiro nem outros clientes) e o cron (segredo próprio).
+RLS ligado em todas as tabelas, sempre por organização (veja acima). `/api/dev/report-sample` (pré-visualização do
+layout com dados fictícios) exige login e responde 404 em produção.
 
 ## Fontes
 
