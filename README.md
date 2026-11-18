@@ -128,6 +128,10 @@ token aleatório de 192 bits, sem financeiro nem outros clientes) e o cron (segr
 RLS ligado em todas as tabelas, sempre por organização (veja acima). `/api/dev/report-sample` (pré-visualização do
 layout com dados fictícios) exige login e responde 404 em produção.
 
+## Instalar como app
+
+O sistema tem `manifest` (`src/app/manifest.ts`) e ícones em `public/icons/`: no Chrome/Edge use *Instalar app* na barra de endereço; no Android, *Adicionar à tela inicial*; no iPhone (Safari), *Compartilhar → Adicionar à Tela de Início*. Abre em tela cheia em `/modulos`. Não há modo offline.
+
 ## Fontes
 
 O relatório usa a fonte **Inter** (licença OFL, em `src/assets/fonts/`).
