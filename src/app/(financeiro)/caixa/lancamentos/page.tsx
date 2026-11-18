@@ -55,7 +55,7 @@ export default async function Lancamentos({ searchParams }: { searchParams: Prom
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="page-title">Lançamentos</h1>
-        <a className="btn btn-ghost" href={`/caixa/exportar?mes=${month}`}>Baixar CSV do mês</a>
+        <div className="flex flex-wrap gap-2"><Link className="btn btn-ghost" href="/caixa/importar">Importar planilha</Link><a className="btn btn-ghost" href={`/caixa/exportar?mes=${month}`}>Baixar CSV do mês</a></div>
       </div>
       <Flash ok={okParam(sp)} />
       <ErrorBox text={erro ? ERR[erro] : undefined} />

@@ -143,3 +143,34 @@ export async function saveCategories(fd: FormData) {
   }
   done(CAD);
 }
+
+/* ---------- Importação de planilha (texto colado) ---------- */
+export type ImportRow = { description: string; due_date: string; amount: number; paid: boolean; notes: string | null };
+export type ImportResult = { ok: true; inserted: number; skipped: number; firstMonth: string } | { ok: false; error: string };
+
+export async function importEntries(input: { kind: string; account_id: string | null; category_id: string | null; rows: ImportRow[] }): Promise<ImportResult> {
+  const sb = await guard();
+  if (input.kind !== "entrada" && input.kind !== "saida") return { ok: false, error: "Tipo inválido." };
+  const rows = input.rows.filter((r) => r.description.trim() && isValidISO(r.due_date) && r.amount > 0);
+  if (rows.length === 0) return { ok: false, error: "Nenhuma linha válida para importar." };
+  if (rows.length > 500) return { ok: false, error: "Importe no máximo 500 linhas por vez." };
+  let category_id = input.category_id;
+  if (category_id) {
+    const { data: cat } = await sb.from("fin_categories").select("kind").eq("id", category_id).maybeSingle();
+    if (!cat || cat.kind !== input.kind) category_id = null;
+  }
+  const dates = rows.map((r) => r.due_date).sort();
+  const { data: existing } = await sb.from("fin_entries").select("description,due_date,amount").eq("kind", input.kind).gte("due_date", dates[0]).lte("due_date", dates[dates.length - 1]);
+  const key = (d: string, due: string, a: number) => `${d.trim().toLowerCase()}|${due}|${Number(a).toFixed(2)}`;
+  const seen = new Set((existing ?? []).map((e) => key(e.description as string, e.due_date as string, Number(e.amount))));
+  const fresh = rows.filter((r) => !seen.has(key(r.description, r.due_date, r.amount)));
+  if (fresh.length) {
+    const { error } = await sb.from("fin_entries").insert(fresh.map((r) => ({
+      kind: input.kind, description: r.description.trim(), amount: r.amount, due_date: r.due_date, paid_date: r.paid ? r.due_date : null,
+      account_id: input.account_id, category_id, notes: r.notes,
+    })));
+    if (error) return { ok: false, error: error.message };
+  }
+  revalidatePath("/caixa", "layout");
+  return { ok: true, inserted: fresh.length, skipped: rows.length - fresh.length, firstMonth: `${dates[0].slice(0, 7)}-01` };
+}

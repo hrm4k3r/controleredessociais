@@ -19,6 +19,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (!access) redirect("/login");
   if (!access.modules.includes("dev")) redirect("/modulos");
   const nav = [...NAV];
+  if (access.modules.includes("agenda")) nav.push(["/agenda", "Agenda"]);
   if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">

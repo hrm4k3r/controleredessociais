@@ -149,3 +149,67 @@ describe("contratos no caixa", () => {
     expect(contractEntries([{ ...cl[0], monthly_amount: 0 }], [], "2026-11-18", null)).toEqual([]);
   });
 });
+
+import { expandEvents, layoutDay, type AgendaEvent } from "./agenda";
+import { parseEntryLines, parseMoney } from "./import-entries";
+const EV = (p: Partial<AgendaEvent>): AgendaEvent => ({ id: "e", user_id: "u", title: "T", description: null, location: null, color: "blue", visibility: "private", recurrence: "none", recur_until: null, start_date: "2026-11-18", end_date: null, start_time: null, end_time: null, ...p });
+describe("agenda", () => {
+  it("evento simples e multi-dia", () => {
+    expect(expandEvents([EV({})], "2026-11-01", "2026-11-30")).toHaveLength(1);
+    expect(expandEvents([EV({})], "2026-12-01", "2026-12-31")).toHaveLength(0);
+    const multi = expandEvents([EV({ start_date: "2026-11-28", end_date: "2026-12-02" })], "2026-12-01", "2026-12-31");
+    expect(multi).toHaveLength(1);
+    expect(multi[0].endDate).toBe("2026-12-02");
+  });
+  it("repetições", () => {
+    const w = expandEvents([EV({ recurrence: "weekly", start_date: "2026-11-02", start_time: "09:00" })], "2026-11-15", "2026-12-06");
+    expect(w.map((o) => o.date)).toEqual(["2026-11-16", "2026-11-23", "2026-11-30", "2026-12-07"].filter((d) => d <= "2026-12-06"));
+    const m = expandEvents([EV({ recurrence: "monthly", start_date: "2026-01-31" })], "2026-02-01", "2026-04-30");
+    expect(m.map((o) => o.date)).toEqual(["2026-02-28", "2026-03-31", "2026-04-30"]);
+    const u = expandEvents([EV({ recurrence: "daily", recur_until: "2026-11-20", start_date: "2026-11-18" })], "2026-11-01", "2026-11-30");
+    expect(u).toHaveLength(3);
+    expect(expandEvents([EV({ recurrence: "yearly", start_date: "2024-11-18" })], "2026-11-01", "2026-11-30")).toHaveLength(1);
+  });
+  it("colunas para eventos sobrepostos", () => {
+    const occ = (id: string, s: string, e: string) => expandEvents([EV({ id, start_time: s, end_time: e })], "2026-11-18", "2026-11-18")[0];
+    const l = layoutDay([occ("a", "09:00", "10:00"), occ("b", "09:30", "10:30"), occ("c", "11:00", "12:00")]);
+    expect(l.find((x) => x.occ.event.id === "a")).toMatchObject({ col: 0, cols: 2 });
+    expect(l.find((x) => x.occ.event.id === "b")).toMatchObject({ col: 1, cols: 2 });
+    expect(l.find((x) => x.occ.event.id === "c")).toMatchObject({ col: 0, cols: 1 });
+  });
+});
+describe("importação de planilha", () => {
+  it("valores", () => {
+    expect(parseMoney("R$ 1.234,56")).toBe(1234.56);
+    expect(parseMoney("120,00")).toBe(120);
+    expect(parseMoney("")).toBeNull();
+  });
+  it("linhas da planilha de saídas", () => {
+    const r = parseEntryLines("Chuteira     20/11/2026    Pendente\nVivo Empresarial\t17/11/2026\tR$ 72,50\tPendente\tFatura vencida em 25/10/2026\nKoin\t30/11/2026\tR$ 44,78\tPendente\t02/12\nsem data aqui\nPagaleve 27/11/2026 R$ 25,27 Pago Compra iFood 2/4");
+    expect(r[0]).toMatchObject({ description: "Chuteira", due_date: "2026-11-20", amount: null, paid: false });
+    expect(r[1]).toMatchObject({ description: "Vivo Empresarial", due_date: "2026-11-17", amount: 72.5, notes: "Fatura vencida em 25/10/2026" });
+    expect(r[2]).toMatchObject({ description: "Koin", amount: 44.78, notes: "02/12" });
+    expect(r[3].error).toBeTruthy();
+    expect(r[4]).toMatchObject({ paid: true, notes: "Compra iFood 2/4" });
+  });
+});
+
+describe("planilha de saídas (amostra real)", () => {
+  it("lê todas as linhas e soma o total", () => {
+    const txt = `Chuteira     20/11/2026    Pendente
+Itaú\t13/11/2026\tR$ 120,00\tPendente\t
+SAAE Casa anterior\t15/11/2026\tR$ 133,10\tPendente\t
+Cartão de crédito\t17/11/2026\tR$ 280,38\tPendente\t
+Vivo Pessoal\t17/11/2026\tR$ 42,90\tPendente\t
+Vivo Empresarial\t17/11/2026\tR$ 72,50\tPendente\tFatura vencida em 25/10/2026
+Empréstimo Leonardo\t17/11/2026\tR$ 700,00\tPendente\t
+Koin\t30/11/2026\tR$ 44,78\tPendente\t02/12
+Koin\t28/09/2027\tR$ 44,78\tPendente\t12/12`;
+    const r = parseEntryLines(txt);
+    expect(r).toHaveLength(9);
+    expect(r.filter((x) => x.error)).toHaveLength(0);
+    expect(r.filter((x) => x.amount == null).map((x) => x.description)).toEqual(["Chuteira"]);
+    expect(Math.round(r.reduce((s, x) => s + (x.amount ?? 0), 0) * 100) / 100).toBe(1438.44);
+    expect(r[8].due_date).toBe("2027-09-28");
+  });
+});

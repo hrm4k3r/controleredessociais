@@ -26,8 +26,8 @@ function mask(v: string) {
 
 /** Data no formato dd/mm/aaaa (independe do idioma do navegador). Envia `name` em ISO (aaaa-mm-dd). */
 export default function DateInput({
-  name, defaultValue, required, className = "input", ariaLabel,
-}: { name: string; defaultValue?: string | null; required?: boolean; className?: string; ariaLabel?: string }) {
+  name, defaultValue, required, className = "input", ariaLabel, onValueChange,
+}: { name: string; defaultValue?: string | null; required?: boolean; className?: string; ariaLabel?: string; /** Recebe a data em ISO (aaaa-mm-dd) ou "" quando incompleta. */ onValueChange?: (iso: string) => void }) {
   const [text, setText] = useState(toBr(defaultValue));
   const picker = useRef<HTMLInputElement>(null);
   const iso = brToIso(text);
@@ -42,6 +42,7 @@ export default function DateInput({
         onChange={(e) => {
           const v = mask(e.target.value);
           setText(v);
+          onValueChange?.(brToIso(v));
           e.target.setCustomValidity(v !== "" && brToIso(v) === "" ? "Informe uma data válida (dd/mm/aaaa)." : "");
         }}
         className={`${className} pr-9`}
@@ -53,7 +54,7 @@ export default function DateInput({
       >📅</button>
       <input
         ref={picker} type="date" tabIndex={-1} aria-hidden value={iso}
-        onChange={(e) => e.target.value && setText(toBr(e.target.value))}
+        onChange={(e) => { if (e.target.value) { setText(toBr(e.target.value)); onValueChange?.(e.target.value); } }}
         className="pointer-events-none absolute right-0 h-0 w-0 opacity-0"
       />
     </span>

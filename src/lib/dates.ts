@@ -85,3 +85,8 @@ export function addMonthsKeepDay(iso: string, n: number): string {
   const tm = (idx % 12) + 1;
   return `${ty}-${String(tm).padStart(2, "0")}-${String(Math.min(d, daysInMonth(ty, tm))).padStart(2, "0")}`;
 }
+
+/** Diferença em dias (b − a) entre duas datas aaaa-mm-dd. */
+export function diffDays(a: string, b: string): number {
+  return Math.round((toUTC(b).getTime() - toUTC(a).getTime()) / 86400000);
+}

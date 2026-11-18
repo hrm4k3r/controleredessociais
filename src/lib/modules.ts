@@ -1,15 +1,16 @@
-export type ModuleId = "social" | "dev" | "financeiro";
+export type ModuleId = "social" | "dev" | "financeiro" | "agenda";
 
 export const MODULES: { id: ModuleId; name: string; description: string; href: string; icon: string }[] = [
   { id: "social", name: "Gestão de Redes Sociais", description: "Postagens, métricas, relatórios semanais, tarefas e financeiro dos clientes.", href: "/", icon: "📣" },
   { id: "dev", name: "Gestão de Projetos de Software", description: "Sistemas, sites e aplicativos: projetos, quadro de tarefas, marcos de entrega e horas.", href: "/dev", icon: "💻" },
   { id: "financeiro", name: "Gestão Financeira", description: "Fluxo de caixa: entradas e saídas, contas a pagar e a receber, saldos e resultado do mês (somente administradores).", href: "/caixa", icon: "💰" },
+  { id: "agenda", name: "Agenda", description: "Seus compromissos do dia, da semana e do mês, com repetição e opção de compartilhar com a equipe.", href: "/agenda", icon: "📅" },
 ];
 /** Gestões que um cliente pode usar (o financeiro é da empresa, não do cliente). */
 export const CLIENT_SERVICES: ModuleId[] = ["social", "dev"];
 export const ALL_MODULES: ModuleId[] = MODULES.map((m) => m.id);
 export const moduleById = (id: ModuleId) => MODULES.find((m) => m.id === id)!;
-export const isModuleId = (v: unknown): v is ModuleId => v === "social" || v === "dev" || v === "financeiro";
+export const isModuleId = (v: unknown): v is ModuleId => v === "social" || v === "dev" || v === "financeiro" || v === "agenda";
 /** Nome curto (sem o prefixo "Gestão de"). */
 export const shortName = (id: ModuleId) => moduleById(id).name.replace(/^Gestão (de )?/, "");
 

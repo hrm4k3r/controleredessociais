@@ -21,6 +21,7 @@ export default async function CaixaLayout({ children }: { children: React.ReactN
   if (!access.modules.includes("financeiro")) redirect("/modulos");
   await ensureCaixaDefaults(sb);
   const nav = [...NAV];
+  if (access.modules.includes("agenda")) nav.push(["/agenda", "Agenda"]);
   if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
