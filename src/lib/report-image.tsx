@@ -107,7 +107,7 @@ export function PostRow({ r, rank, dense = false }: { r: ResultRow; rank: string
     <div style={{ display: "flex", alignItems: "center", background: C.card, borderRadius: 24, padding: dense ? "8px 26px" : "14px 26px", gap: 22 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 60, height: 60, borderRadius: 30, background: MEDAL[Number.parseInt(rank) - 1] ?? C.navy, color: "#fff", fontSize: 30, fontWeight: 800 }}>{rank}</div>
       <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, gap: 2 }}>
-        <div style={{ fontSize: 30, fontWeight: 800, color: C.navy }}>{`${r.network} · ${r.post.format ?? "Post"}`}</div>
+        <div style={{ fontSize: 30, fontWeight: 800, color: C.navy }}>{clip(`${r.network} · ${r.post.format ?? "Post"}`, 36)}</div>
         {!dense && <div style={{ fontSize: 24, color: C.muted, fontWeight: 600 }}>{clip(r.post.summary ?? "", 46)}</div>}
         <div style={{ fontSize: 26, color: C.text, fontWeight: 600 }}>
           {`${int(r.result?.reach)} alcance · ${int(r.interactions)} interações · ${pct(r.rate)}`}

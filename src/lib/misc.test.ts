@@ -225,3 +225,17 @@ describe("hora da coleta", () => {
     expect(spToISO("", "10:00")).toBeNull();
   });
 });
+
+import { allowsMultiFormat, joinFormats, normalizeFormat, splitFormats } from "./format";
+describe("formato múltiplo (Instagram)", () => {
+  it("junta, separa e normaliza", () => {
+    expect(joinFormats(["Feed (imagem)", "Stories"])).toBe("Feed (imagem) + Stories");
+    expect(splitFormats("Feed (imagem) + Stories")).toEqual(["Feed (imagem)", "Stories"]);
+    expect(splitFormats(null)).toEqual([]);
+    expect(allowsMultiFormat(["Facebook", "Instagram"])).toBe(true);
+    expect(allowsMultiFormat(["Facebook"])).toBe(false);
+    expect(normalizeFormat("Feed (imagem) + Stories", true)).toBe("Feed (imagem) + Stories");
+    expect(normalizeFormat("Feed (imagem) + Stories", false)).toBe("Feed (imagem)");
+    expect(normalizeFormat("", true)).toBeNull();
+  });
+});

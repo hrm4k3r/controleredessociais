@@ -2,6 +2,8 @@
 import SubmitButton from "@/components/SubmitButton";
 import { useState } from "react";
 import DateInput from "@/components/DateInput";
+import FormatPicker from "@/components/FormatPicker";
+import { allowsMultiFormat, normalizeFormat } from "@/lib/format";
 import { STATUSES } from "@/lib/constants";
 
 type Props = {
@@ -19,6 +21,8 @@ type Props = {
 export default function PostForm({ action, clients, accountsByClient, formats, themes, today, initial, submitLabel = "Salvar post", defaultClientId }: Props) {
   const [clientId, setClientId] = useState(initial?.client_id ?? defaultClientId ?? clients[0]?.id ?? "");
   const [sel, setSel] = useState<string[]>(initial?.networks ?? []);
+  const [format, setFormat] = useState(initial?.format ?? "");
+  const multi = allowsMultiFormat(sel);
   const nets = accountsByClient[clientId] ?? [];
   const toggle = (n: string) => setSel((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]));
   return (
@@ -41,12 +45,11 @@ export default function PostForm({ action, clients, accountsByClient, formats, t
             {STATUSES.map((s) => <option key={s}>{s}</option>)}
           </select>
         </div>
-        <div>
+        <div className={multi ? "sm:col-span-2 lg:col-span-2" : ""}>
           <label className="label">Formato</label>
-          <select name="format" defaultValue={initial?.format ?? ""} className="input">
-            <option value="">—</option>
-            {formats.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          <input type="hidden" name="format" value={normalizeFormat(format, multi) ?? ""} />
+          <FormatPicker formats={formats} value={format} onChange={setFormat} multi={multi} />
+          {multi && <p className="mt-1 text-xs text-slate-500">No Instagram você pode marcar mais de um (ex.: Feed e Stories no mesmo post).</p>}
         </div>
         <div>
           <label className="label">Tema</label>

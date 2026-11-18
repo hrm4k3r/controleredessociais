@@ -6,6 +6,8 @@ import DateInput from "@/components/DateInput";
 import { fmtDiaMes, todayISO } from "@/lib/dates";
 import Link from "next/link";
 import Author from "@/components/Author";
+import FormatPicker from "@/components/FormatPicker";
+import { allowsMultiFormat, normalizeFormat, splitFormats } from "@/lib/format";
 import { positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
 import { carryOver, createTask, deleteTask, moveTask, updateTask } from "@/app/(app)/tarefas/actions";
 
@@ -59,9 +61,9 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
     });
   }
 
-  async function add(status: TaskStatus, title: string, client_id: string | null, format: string | null, theme: string | null) {
+  async function add(status: TaskStatus, title: string, client_id: string | null, format: string | null, theme: string | null, networks: string[]) {
     const position = positionAt(col(status).map((x) => x.position), col(status).length);
-    const r = await createTask({ title, client_id, status, week_start: week, position, format, theme });
+    const r = await createTask({ title, client_id, status, week_start: week, position, format, theme, networks });
     if (!r.ok) return fail(r.error);
     setTasks((cur) => [...cur, r.task]);
     setError(null); setNotice(null);
@@ -122,7 +124,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                           {t.client_id && <span className="badge bg-slate-100 text-slate-700">{clientName.get(t.client_id) ?? "Cliente"}</span>}
                           {t.due_date && <span className={`badge ${late ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-700"}`}>⏰ {fmtDiaMes(t.due_date)}</span>}
-                          {t.format && <span className="badge bg-slate-100 text-slate-700">{t.format}</span>}
+                          {splitFormats(t.format).map((f) => <span key={f} className="badge bg-slate-100 text-slate-700">{f}</span>)}
                           {t.theme && <span className="badge bg-slate-100 text-slate-700">{t.theme}</span>}
                           {t.networks?.length > 0 && <span className="badge bg-slate-100 text-slate-700" title="Redes">{t.networks.join(", ")}</span>}
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
@@ -143,9 +145,9 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
 
               {adding === c.id ? (
                 <AddCard
-                  clients={clients} defaultClientId={defaultClientId} formats={formats} themes={themes}
+                  clients={clients} defaultClientId={defaultClientId} formats={formats} themes={themes} accountsByClient={accountsByClient}
                   onCancel={() => setAdding(null)}
-                  onAdd={async (title, cid, fmt, th) => { await add(c.id, title, cid, fmt, th); }}
+                  onAdd={async (title, cid, fmt, th, nets) => { await add(c.id, title, cid, fmt, th, nets); }}
                 />
               ) : (
                 <button className="mt-2 w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-600 hover:bg-surface" onClick={() => setAdding(c.id)}>+ Adicionar cartão</button>
@@ -178,21 +180,25 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   );
 }
 
-function AddCard({ clients, defaultClientId, formats, themes, onAdd, onCancel }: {
-  clients: ClientOpt[]; defaultClientId?: string; formats: string[]; themes: string[];
-  onAdd: (title: string, clientId: string | null, format: string | null, theme: string | null) => Promise<void>; onCancel: () => void;
+function AddCard({ clients, defaultClientId, formats, themes, accountsByClient, onAdd, onCancel }: {
+  clients: ClientOpt[]; defaultClientId?: string; formats: string[]; themes: string[]; accountsByClient: Record<string, string[]>;
+  onAdd: (title: string, clientId: string | null, format: string | null, theme: string | null, networks: string[]) => Promise<void>; onCancel: () => void;
 }) {
   const [format, setFormat] = useState("");
   const [theme, setTheme] = useState("");
   const [title, setTitle] = useState("");
+  const initialNets = (id: string) => { const a = accountsByClient[id] ?? []; return a.length === 1 ? a : []; };
   const [cid, setCid] = useState(defaultClientId ?? "");
+  const [nets, setNets] = useState<string[]>(() => initialNets(defaultClientId ?? ""));
   const [pending, setPending] = useState(false);
+  const multi = allowsMultiFormat(nets);
+  const accts = accountsByClient[cid] ?? [];
   async function submit() {
     if (!title.trim() || pending) return;
     setPending(true);
-    await onAdd(title, cid || null, format || null, theme || null);
+    await onAdd(title, cid || null, normalizeFormat(format, multi), theme || null, nets);
     setPending(false);
-    setTitle("");
+    setTitle(""); setFormat(""); setTheme("");
   }
   return (
     <div className="mt-2 space-y-2">
@@ -200,14 +206,28 @@ function AddCard({ clients, defaultClientId, formats, themes, onAdd, onCancel }:
         autoFocus rows={2} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título do cartão…" className="input resize-none"
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void submit(); } if (e.key === "Escape") onCancel(); }}
       />
-      <select value={cid} onChange={(e) => setCid(e.target.value)} className="input" aria-label="Cliente">
+      <select value={cid} onChange={(e) => { setCid(e.target.value); setNets(initialNets(e.target.value)); }} className="input" aria-label="Cliente">
         <option value="">Sem cliente</option>
         {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
-      <div className="grid grid-cols-2 gap-2">
-        <select value={format} onChange={(e) => setFormat(e.target.value)} className="input" aria-label="Formato"><option value="">Formato</option>{formats.map((f) => <option key={f} value={f}>{f}</option>)}</select>
-        <select value={theme} onChange={(e) => setTheme(e.target.value)} className="input" aria-label="Tema"><option value="">Tema</option>{themes.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+      {accts.length > 0 && (
+        <div>
+          <div className="label">Redes</div>
+          <div className="flex flex-wrap gap-1.5">
+            {accts.map((n) => (
+              <label key={n} className="flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-sm">
+                <input type="checkbox" checked={nets.includes(n)} onChange={() => setNets((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]))} className="h-4 w-4" />{n}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <div className="label">Formato</div>
+        <FormatPicker formats={formats} value={format} onChange={setFormat} multi={multi} />
+        {multi && <p className="mt-1 text-xs text-slate-500">No Instagram dá para marcar mais de um (ex.: Feed e Stories).</p>}
       </div>
+      <select value={theme} onChange={(e) => setTheme(e.target.value)} className="input" aria-label="Tema"><option value="">Tema</option>{themes.map((t) => <option key={t} value={t}>{t}</option>)}</select>
       <div className="flex items-center gap-2">
         <button className="btn btn-accent" disabled={pending || !title.trim()} onClick={() => void submit()}>{pending ? "Adicionando…" : "Adicionar"}</button>
         <button className="px-2 text-sm text-slate-600 hover:underline" onClick={onCancel}>Fechar</button>
@@ -227,10 +247,11 @@ function EditDialog({ task, clients, names, formats, themes, accountsByClient, o
   const [pending, setPending] = useState(false);
   const [cid, setCid] = useState("");
   const [nets, setNets] = useState<string[]>([]);
+  const [format, setFormat] = useState("");
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (task && !d.open) { setErr(null); setCid(task.client_id ?? ""); setNets(task.networks ?? []); d.showModal(); }
+    if (task && !d.open) { setErr(null); setCid(task.client_id ?? ""); setNets(task.networks ?? []); setFormat(task.format ?? ""); d.showModal(); }
     if (!task && d.open) d.close();
   }, [task]);
 
@@ -251,7 +272,7 @@ function EditDialog({ task, clients, names, formats, themes, accountsByClient, o
               title: String(f.get("title") ?? ""), client_id: String(f.get("client_id") ?? "") || null,
               status: String(f.get("status")) as TaskStatus, due_date: String(f.get("due_date") ?? "") || null,
               notes: String(f.get("notes") ?? "") || null,
-              format: String(f.get("format") ?? "") || null, theme: String(f.get("theme") ?? "") || null, networks: nets,
+              format: normalizeFormat(format, allowsMultiFormat(nets)), theme: String(f.get("theme") ?? "") || null, networks: nets,
             });
             setPending(false);
             if (msg) setErr(msg); else ref.current?.close();
@@ -273,7 +294,8 @@ function EditDialog({ task, clients, names, formats, themes, accountsByClient, o
           <div className="max-w-48"><label className="label">Prazo</label><DateInput name="due_date" defaultValue={task.due_date} /></div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><label className="label">Formato</label>
-              <select name="format" defaultValue={task.format ?? ""} className="input"><option value="">—</option>{formats.map((f) => <option key={f} value={f}>{f}</option>)}</select></div>
+              <FormatPicker formats={formats} value={format} onChange={setFormat} multi={allowsMultiFormat(nets)} />
+              {allowsMultiFormat(nets) && <p className="mt-1 text-xs text-slate-500">No Instagram dá para marcar mais de um (ex.: Feed e Stories).</p>}</div>
             <div><label className="label">Tema</label>
               <select name="theme" defaultValue={task.theme ?? ""} className="input"><option value="">—</option>{themes.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
           </div>
