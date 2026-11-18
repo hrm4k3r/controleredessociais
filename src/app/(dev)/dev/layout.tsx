@@ -20,7 +20,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (!access.modules.includes("dev")) redirect("/modulos");
   const nav = [...NAV];
   if (access.modules.includes("agenda")) nav.push(["/agenda", "Agenda"]);
-  if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
+  if (canManageUsers(access.role)) nav.push(["/tempo", "Tempo"], ["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
       <AppHeader title="Projetos de Software" nav={nav} canSwitch={access.modules.length > 1} />

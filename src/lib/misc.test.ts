@@ -271,3 +271,55 @@ describe("pomodoro", () => {
     expect(clampCfg({ focus: 0, short: 999, long: NaN, every: 1 })).toEqual({ focus: 1, short: 60, long: 15, every: 2 });
   });
 });
+
+import { deviationPct, elapsedMin, fmtMin, groupBy, stats } from "./time-report";
+describe("relatório de tempo", () => {
+  it("estatísticas", () => {
+    expect(stats([])).toEqual({ n: 0, avg: null, median: null, total: 0 });
+    expect(stats([10, 20, 60])).toEqual({ n: 3, avg: 30, median: 20, total: 90 });
+    expect(stats([10, 20, 30, 40]).median).toBe(25);
+  });
+  it("tempo decorrido e formatação", () => {
+    expect(elapsedMin("2026-11-18T17:00:00Z", "2026-11-18T18:15:00Z")).toBe(75);
+    expect(elapsedMin("2026-11-18T18:00:00Z", "2026-11-18T17:00:00Z")).toBeNull();
+    expect(elapsedMin("2026-11-01T00:00:00Z", "2026-11-18T00:00:00Z")).toBeNull();
+    expect(elapsedMin(null, "2026-11-18T00:00:00Z")).toBeNull();
+    expect(fmtMin(75)).toBe("1h15");
+    expect(fmtMin(45)).toBe("45min");
+    expect(fmtMin(120)).toBe("2h");
+    expect(fmtMin(null)).toBe("—");
+  });
+  it("agrupa e compara com o estimado", () => {
+    expect([...groupBy([1, 2, 3, 4], (n) => (n % 2 ? "i" : "p")).entries()]).toEqual([["i", [1, 3]], ["p", [2, 4]]]);
+    expect(deviationPct(10, 12)).toBe(20);
+    expect(deviationPct(0, 5)).toBeNull();
+  });
+});
+
+import { compare, lastSunday, totals } from "./baseline";
+describe("marco inicial (antes × depois)", () => {
+  const N = (followers: number | null, reach: number | null, interactions: number | null) => ({ followers, views: null, reach, interactions, clicks: null });
+  it("compara uma conta", () => {
+    const l = compare(N(1000, 2000, 100), N(1300, 4000, 400));
+    const f = l.find((x) => x.key === "followers")!;
+    expect(f).toMatchObject({ before: 1000, after: 1300, delta: 300 });
+    expect(f.deltaPct).toBeCloseTo(0.3);
+    const e = l.find((x) => x.key === "engagement")!;
+    expect(e.before).toBeCloseTo(0.05);
+    expect(e.after).toBeCloseTo(0.1);
+    expect(e.delta).toBeCloseTo(0.05);
+    expect(l.find((x) => x.key === "clicks")!.delta).toBeNull();
+  });
+  it("totais usam só contas com dado nos dois lados", () => {
+    const t = totals([{ before: N(1000, 2000, 100), after: N(1200, 3000, 300) }, { before: N(500, null, null), after: N(700, null, null) }, { before: N(null, null, null), after: N(900, null, null) }]);
+    const f = t.find((x) => x.key === "followers")!;
+    expect(f).toMatchObject({ before: 1500, after: 1900, delta: 400 });
+    expect(t.find((x) => x.key === "reach")).toMatchObject({ before: 2000, after: 3000 });
+    expect(t.find((x) => x.key === "engagement")!.before).toBeCloseTo(0.05);
+  });
+  it("último domingo", () => {
+    expect(lastSunday("2026-11-18")).toBe("2026-11-15");
+    expect(lastSunday("2026-11-15")).toBe("2026-11-15");
+    expect(lastSunday("2026-11-16")).toBe("2026-11-15");
+  });
+});

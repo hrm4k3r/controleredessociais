@@ -10,7 +10,9 @@ export default async function ContaLayout({ children }: { children: React.ReactN
   const access = await getAccess(supabase);
   if (!access) redirect("/login");
   const nav: [string, string][] = access.modules.map((m) => [moduleById(m).href, moduleById(m).name]);
-  nav.push(["/clientes", "Clientes"], ["/usuarios", "Usuários"]);
+  nav.push(["/clientes", "Clientes"]);
+  if (access.role === "owner" || access.role === "admin") nav.push(["/tempo", "Tempo"]);
+  nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
       <AppHeader title="Conta" nav={nav} canSwitch={access.modules.length > 1} />
