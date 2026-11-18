@@ -12,27 +12,6 @@ const fail = (e: { message: string } | null) => {
   if (e) throw new Error(e.message);
 };
 
-export async function saveClients(fd: FormData) {
-  const sb = await createClient();
-  const ids = fd.getAll("id").map(String);
-  for (const id of ids) {
-    const name = textField(fd.get(`name|${id}`));
-    const goal = intField(fd.get(`goal|${id}`)) ?? 0;
-    if (!name) continue;
-    fail((await sb.from("clients").update({ name, weekly_goal: goal }).eq("id", id)).error);
-  }
-  done();
-}
-
-export async function addClient(fd: FormData) {
-  const sb = await createClient();
-  const name = textField(fd.get("name"));
-  if (!name) done("erro=nome");
-  const { data: last } = await sb.from("clients").select("sort").order("sort", { ascending: false }).limit(1);
-  fail((await sb.from("clients").insert({ name, weekly_goal: intField(fd.get("goal")) ?? 0, is_internal: fd.get("internal") === "on", sort: (last?.[0]?.sort ?? 0) + 1 })).error);
-  done();
-}
-
 export async function saveAccounts(fd: FormData) {
   const sb = await createClient();
   const client_id = String(fd.get("client_id"));

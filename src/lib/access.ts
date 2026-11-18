@@ -29,7 +29,8 @@ export async function getAccess(sb: SupabaseClient): Promise<Access | null> {
   }
   const role = m?.role ?? null;
   const allowedOrg = effectiveModules({ org: orgModules, member: null, role: "owner", env });
-  const modules = orgId ? effectiveModules({ org: orgModules, member: m?.modules ?? null, role, env }) : [];
+  // O Financeiro (caixa) é restrito a proprietário/administrador, mesmo que o módulo esteja liberado.
+  const modules = orgId ? effectiveModules({ org: orgModules, member: m?.modules ?? null, role, env }).filter((x) => x !== "financeiro" || canSeeFinance(role)) : [];
   return { userId: u.user.id, orgId, role, orgModules: allowedOrg, modules };
 }
 

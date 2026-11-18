@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { socialClientFilter } from "@/lib/social-clients";
@@ -6,7 +7,7 @@ import { canSeeFinance } from "@/lib/roles";
 import { loadLists } from "@/lib/data";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
-import { addClient, addEmail, addListItem, removeEmail, removeListItem, saveAccounts, saveClients } from "./actions";
+import { addEmail, addListItem, removeEmail, removeListItem, saveAccounts } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,25 +32,12 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
       <Flash ok={okParam(sp)} />
       <ErrorBox text={erro ? ERR[erro] : undefined} />
 
-      <section className="card space-y-3">
-        <h2 className="font-bold text-navy">Clientes e meta de posts por semana</h2>
-        <p className="text-sm text-slate-600">A meta conta posts (conteúdos), não redes: um post em várias redes vale 1.</p>
-        <form action={saveClients} className="space-y-2">
-          {(clients ?? []).map((c) => (
-            <div key={c.id} className="grid grid-cols-[1fr_6rem] items-end gap-3 sm:grid-cols-[1fr_8rem_8rem]">
-              <input type="hidden" name="id" value={c.id} />
-              <div><label className="label">Nome{c.is_internal ? " (conta própria — fora do financeiro)" : ""}</label><input name={`name|${c.id}`} defaultValue={c.name} className="input" /></div>
-              <div><label className="label">Meta/semana</label><input name={`goal|${c.id}`} type="number" min={0} defaultValue={c.weekly_goal} className="input !bg-yellow-50" /></div>
-            </div>
-          ))}
-          <SubmitButton className="btn">Salvar clientes</SubmitButton>
-        </form>
-        <form action={addClient} className="flex flex-wrap items-end gap-3 border-t border-line pt-3">
-          <div><label className="label">Novo cliente</label><input name="name" required className="input" /></div>
-          <div><label className="label">Meta/semana</label><input name="goal" type="number" min={0} defaultValue={2} className="input !w-28" /></div>
-          <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" name="internal" /> Conta própria</label>
-          <SubmitButton className="btn btn-ghost">Adicionar</SubmitButton>
-        </form>
+      <section className="card flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-bold text-navy">Clientes e meta de posts por semana</h2>
+          <p className="text-sm text-slate-600">O cadastro de clientes é único para todas as gestões (nome, serviços usados e meta de posts).</p>
+        </div>
+        <Link href="/clientes" className="btn">Gerenciar clientes</Link>
       </section>
 
       <section className="card space-y-4">

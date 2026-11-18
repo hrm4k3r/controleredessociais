@@ -70,3 +70,18 @@ export function addMonths(iso: string, n: number): string {
   const idx = y * 12 + (m - 1) + n;
   return `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, "0")}-01`;
 }
+
+/** Último dia do mês de `iso` (aaaa-mm-dd). */
+export function monthEnd(iso: string): string {
+  const [y, m] = iso.split("-").map(Number);
+  return `${y}-${String(m).padStart(2, "0")}-${String(daysInMonth(y, m)).padStart(2, "0")}`;
+}
+
+/** Soma `n` meses mantendo o dia (limitado ao último dia do mês de destino). */
+export function addMonthsKeepDay(iso: string, n: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const idx = y * 12 + (m - 1) + n;
+  const ty = Math.floor(idx / 12);
+  const tm = (idx % 12) + 1;
+  return `${ty}-${String(tm).padStart(2, "0")}-${String(Math.min(d, daysInMonth(ty, tm))).padStart(2, "0")}`;
+}

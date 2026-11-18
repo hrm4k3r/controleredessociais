@@ -105,8 +105,10 @@ o que pertence a uma organização da qual é membro (`organization_members`, pa
 
 ## Gestões (módulos) e venda do pacote
 
-O sistema tem duas gestões no mesmo pacote: **Redes Sociais** (`social`, rotas na raiz) e **Projetos de Software**
-(`dev`, rotas em `/dev`: Painel, Projetos com quadro Kanban, marcos de entrega, Minhas tarefas e Horas).
+O sistema tem três gestões no mesmo pacote: **Redes Sociais** (`social`, rotas na raiz), **Projetos de Software**
+(`dev`, rotas em `/dev`: Painel, Projetos com quadro Kanban, marcos de entrega, Minhas tarefas e Horas) e **Financeiro**
+(`financeiro`, rotas em `/caixa`: fluxo de caixa com entradas e saídas, contas a pagar/receber, contas, categorias e CSV;
+só proprietário/administrador).
 Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, entra direto).
 
 - **Por organização (o que foi vendido):** coluna `organizations.modules` (padrão `{social,dev}`). Para vender só uma gestão:
@@ -114,9 +116,9 @@ Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, e
 - **Por implantação (opcional):** variável `ENABLED_MODULES=social,dev` limita as gestões daquele deploy.
 - **Por usuário:** em *Usuários* marca-se quais gestões cada pessoa acessa (sem marcar nada = erro; todas = sem restrição).
   O proprietário sempre acessa tudo que foi contratado. O usuário só vê o que foi liberado, e o banco (RLS, função `has_module`) também impede o acesso.
-- **Clientes** são compartilhados (`clients.modules`): clientes criados em Projetos não aparecem em Redes Sociais, e vice-versa,
-  a menos que o cliente seja usado nas duas gestões.
-- **Migrações:** `20261118000005_modulos.sql` e `20261118000006_dev_projetos.sql`.
+- **Clientes** têm cadastro global em `/clientes`: cada cliente marca os serviços que usa (Redes Sociais e/ou Projetos) e só
+  aparece nas gestões marcadas (`clients.modules`).
+- **Migrações:** `20261118000005_modulos.sql`, `20261118000006_dev_projetos.sql` e `20261118000007_financeiro_caixa.sql`.
 
 ## Segurança
 

@@ -9,6 +9,7 @@ const NAV: [string, string][] = [
   ["/dev/projetos", "Projetos"],
   ["/dev/minhas", "Minhas tarefas"],
   ["/dev/horas", "Horas"],
+  ["/clientes", "Clientes"],
 ];
 
 /** Gestão de Projetos de Software. */

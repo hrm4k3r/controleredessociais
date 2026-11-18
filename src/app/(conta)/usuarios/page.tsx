@@ -5,7 +5,7 @@ import { requireManager } from "@/lib/access";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
 import { ROLE_LABEL, canAssign, canManageTarget, type Role } from "@/lib/roles";
-import { moduleById, parseModules, type ModuleId } from "@/lib/modules";
+import { parseModules, shortName, type ModuleId } from "@/lib/modules";
 import { changeRole, createUser, removeUser, setDisplayName, setModules, setPassword } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
     <span className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
       {orgMods.map((id) => (
         <label key={id} className="inline-flex items-center gap-1.5">
-          <input type="checkbox" name="mod" value={id} defaultChecked={selected.includes(id)} disabled={disabled} className="h-4 w-4" />{moduleById(id).name.replace("Gestão de ", "")}
+          <input type="checkbox" name="mod" value={id} defaultChecked={selected.includes(id)} disabled={disabled} className="h-4 w-4" />{shortName(id)}{id === "financeiro" && <span className="text-xs text-slate-500">(só admin)</span>}
         </label>
       ))}
     </span>
@@ -108,7 +108,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
                           <ModChecks selected={mods} />
                           <SubmitButton className="btn btn-ghost">Salvar</SubmitButton>
                         </form>
-                      ) : <span className="text-sm text-slate-600">{role === "owner" ? "Todas" : mods.map((x) => moduleById(x).name.replace("Gestão de ", "")).join(", ") || "Nenhuma"}</span>}
+                      ) : <span className="text-sm text-slate-600">{role === "owner" ? "Todas" : mods.map((x) => shortName(x)).join(", ") || "Nenhuma"}</span>}
                     </td>
                   )}
                   <td className="td">

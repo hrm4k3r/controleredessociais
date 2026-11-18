@@ -12,6 +12,7 @@ const NAV: [string, string][] = [
   ["/resultados", "Resultados"],
   ["/relatorio", "Relatório"],
   ["/financeiro", "Financeiro"],
+  ["/clientes", "Clientes"],
   ["/cadastros", "Cadastros"],
 ];
 

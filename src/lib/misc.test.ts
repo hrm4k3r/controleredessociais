@@ -108,3 +108,30 @@ describe("projetos de software", () => {
     expect(isLate(null, "a_fazer", "2026-11-18")).toBe(false);
   });
 });
+
+import { balances, forecast, pending, realized, splitAmount, statusOf, type Entry } from "./caixa";
+import { addMonthsKeepDay, monthEnd } from "./dates";
+const E = (p: Partial<Entry>): Entry => ({ id: "x", kind: "entrada", description: "d", amount: 100, due_date: "2026-11-10", paid_date: null, account_id: "a", category_id: null, client_id: null, notes: null, group_id: null, installment: null, installments: null, created_by: null, ...p });
+describe("caixa", () => {
+  it("status", () => {
+    expect(statusOf({ paid_date: "2026-11-01", due_date: "2026-10-01" }, "2026-11-18")).toBe("pago");
+    expect(statusOf({ paid_date: null, due_date: "2026-11-10" }, "2026-11-18")).toBe("atrasado");
+    expect(statusOf({ paid_date: null, due_date: "2026-11-20" }, "2026-11-18")).toBe("pendente");
+  });
+  it("saldo, realizado, previsto e pendentes", () => {
+    const acc = [{ id: "a", name: "A", kind: "banco", opening_balance: 1000, active: true, sort: 0 }];
+    const es = [E({ paid_date: "2026-11-05", amount: 500 }), E({ kind: "saida", paid_date: "2026-11-06", amount: 200 }), E({ kind: "saida", amount: 50, due_date: "2026-11-02" }), E({ amount: 300, due_date: "2026-12-01" })];
+    expect(balances(acc, es, "2026-11-18").get("a")).toBe(1300);
+    expect(realized(es, "2026-11-01")).toEqual({ entradas: 500, saidas: 200, resultado: 300 });
+    expect(forecast(es, "2026-11-01")).toEqual({ entradas: 500, saidas: 250, resultado: 250 });
+    expect(pending(es, "saida", "2026-11-18")).toEqual({ total: 50, overdue: 50 });
+    expect(pending(es, "entrada", "2026-11-18")).toEqual({ total: 300, overdue: 0 });
+  });
+  it("parcelas e datas", () => {
+    expect(splitAmount(100, 3)).toEqual([33.33, 33.33, 33.34]);
+    expect(splitAmount(100, 3).reduce((a, b) => a + b, 0)).toBeCloseTo(100, 2);
+    expect(addMonthsKeepDay("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonthsKeepDay("2026-11-15", 3)).toBe("2027-02-15");
+    expect(monthEnd("2026-02-10")).toBe("2026-02-28");
+  });
+});
