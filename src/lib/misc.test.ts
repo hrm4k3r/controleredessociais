@@ -61,3 +61,13 @@ describe("papéis", () => {
     expect(canAssign("owner", "owner")).toBe(false);
   });
 });
+
+import { positionAt } from "./tasks";
+describe("kanban", () => {
+  it("calcula a posição de inserção", () => {
+    expect(positionAt([], 0)).toBe(1000);
+    expect(positionAt([1000, 2000], 0)).toBe(0);
+    expect(positionAt([1000, 2000], 1)).toBe(1500);
+    expect(positionAt([1000, 2000], 2)).toBe(3000);
+  });
+});

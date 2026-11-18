@@ -8,6 +8,7 @@ import { canManageUsers, canSeeFinance } from "@/lib/roles";
 const NAV: [string, string][] = [
   ["/", "Painel"],
   ["/postagens", "Postagens"],
+  ["/tarefas", "Tarefas"],
   ["/metricas", "Métricas"],
   ["/resultados", "Resultados"],
   ["/relatorio", "Relatório"],

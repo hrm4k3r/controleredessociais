@@ -75,6 +75,7 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
   um post em várias redes conta 1.
 - **Domingo:** *Métricas* (seguidores, visualizações, alcance, interações, cliques por conta) e *Resultados* (números de cada post por rede).
 - **Segunda:** *Painel* (meta × feito, variação) e *Relatório* (comentário, próximos passos, PNG, link e envio).
+- **Tarefas:** quadro Kanban semanal (A fazer / Em andamento / Em revisão / Concluído) para organizar as postagens a criar; arraste os cartões, filtre por cliente e leve os pendentes para a próxima semana. Exige a migração `20261118000002_tarefas.sql`.
 - **Financeiro:** valor/vencimento por cliente e pagamentos do mês. **Cadastros:** metas, redes, e-mails e listas. **Backup:** XLSX/CSV em *Cadastros*.
 
 ## Regras de cálculo (testadas em `src/lib/lib.test.ts`)
