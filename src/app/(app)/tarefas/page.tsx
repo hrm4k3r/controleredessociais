@@ -18,10 +18,12 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
   const onlySocial = await socialClientFilter(sb);
   const [{ data: clients }, tasksRes] = await Promise.all([
     onlySocial(sb.from("clients").select("id,name").eq("active", true)).order("sort"),
-    (() => {
-      let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at,format,theme,networks").eq("week_start", week).order("position");
-      if (clientFilter) q = q.eq("client_id", clientFilter);
-      return q;
+    (async () => {
+      const base = "id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at,format,theme,networks";
+      const run = (cols: string) => { let q = sb.from("tasks").select(cols).eq("week_start", week).order("position"); if (clientFilter) q = q.eq("client_id", clientFilter); return q; };
+      // Início/fim: se a migração 13 ainda não rodou, carrega sem eles.
+      const withTimes = await run(`${base},started_at,finished_at`);
+      return withTimes.error ? run(base) : withTimes;
     })(),
   ]);
   const names = await loadMemberNames(sb);
@@ -52,7 +54,7 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
         </div>
       ) : (
         <Kanban
-          key={`${week}|${clientFilter}`} week={week} names={names} formats={lists.formats} themes={lists.themes} accountsByClient={accountsByClient} initial={(tasksRes.data ?? []) as Task[]}
+          key={`${week}|${clientFilter}`} week={week} names={names} formats={lists.formats} themes={lists.themes} accountsByClient={accountsByClient} initial={(tasksRes.data ?? []) as unknown as Task[]}
           clients={(clients ?? []).map((c) => ({ id: c.id as string, name: c.name as string }))}
           nextWeekHref={`/tarefas?${nextWeek.toString()}`} defaultClientId={clientFilter || undefined}
         />

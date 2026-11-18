@@ -3,17 +3,22 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import DateInput from "@/components/DateInput";
-import { fmtDiaMes, todayISO } from "@/lib/dates";
+import { fmtDiaMes, spParts, spToISO, todayISO } from "@/lib/dates";
 import Link from "next/link";
 import Author from "@/components/Author";
 import FormatPicker from "@/components/FormatPicker";
 import { allowsMultiFormat, normalizeFormat, splitFormats } from "@/lib/format";
-import { positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
+import CollectedAt from "@/components/CollectedAt";
+import { durationLabel, positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
 import { carryOver, createTask, deleteTask, moveTask, updateTask } from "@/app/(app)/tarefas/actions";
 
 type ClientOpt = { id: string; name: string };
 
 const hue = (s: string) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 360, 7);
+/** "14:05" se for hoje; senão "18/11 14:05". */
+const clock = (iso: string, today: string) => { const p = spParts(iso); return p.date === today ? p.time : `${p.date.slice(8)}/${p.date.slice(5, 7)} ${p.time}`; };
+/** Lê data+hora de um par de campos do formulário; vazio = null (limpa). */
+const whenOf = (f: FormData, k: string): string | null => spToISO(String(f.get(`${k}|date`) ?? ""), String(f.get(`${k}|time`) ?? ""));
 const byPos = (a: Task, b: Task) => a.position - b.position;
 
 export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId, names, formats, themes, accountsByClient }: {
@@ -35,7 +40,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   const fail = (msg: string) => setError(msg);
   /** Aplica o resultado da geração automática de post (cartão concluído -> "Planejado"). */
   function applyPost(id: string, p: PostSync) {
-    setTasks((cur) => cur.map((x) => (x.id === id ? { ...x, post_id: p.post_id ?? x.post_id, completed_by: p.completed_by } : x)));
+    setTasks((cur) => cur.map((x) => (x.id === id ? { ...x, post_id: p.post_id ?? x.post_id, completed_by: p.completed_by, started_at: p.started_at, finished_at: p.finished_at } : x)));
     if (p.state === "created") setNotice({ text: "Post \"Planejado\" criado em Postagens a partir do cartão.", href: `/postagens/${p.post_id}` });
     else if (p.state === "no_client") setNotice({ text: "Cartão concluído sem cliente: nenhum post foi criado. Defina o cliente e salve o cartão para gerar.", warn: true });
   }
@@ -130,6 +135,12 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
                           {t.post_id && <Link href={`/postagens/${t.post_id}`} onClick={(e) => e.stopPropagation()} className="badge bg-blue-100 text-blue-800 hover:underline" draggable={false}>📌 Post planejado</Link>}
                         </div>
+                        {t.started_at && (
+                          <div className="mt-2 text-xs text-slate-600" title="Hora de início e de fim">
+                            ▶ {clock(t.started_at, today)}{t.finished_at && <> · ■ {clock(t.finished_at, today)}{durationLabel(t.started_at, t.finished_at) && <span className="font-semibold"> · {durationLabel(t.started_at, t.finished_at)}</span>}</>}
+                          </div>
+                        )}
+                        {!t.started_at && t.finished_at && <div className="mt-2 text-xs text-slate-600" title="Hora de fim">■ {clock(t.finished_at, today)}</div>}
                         {(t.created_by || t.completed_by) && (
                           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
                             {t.created_by && <Author name={names[t.created_by] ?? "Usuário"} label="Criado por" />}
@@ -236,7 +247,7 @@ function AddCard({ clients, defaultClientId, formats, themes, accountsByClient, 
   );
 }
 
-type Values = { title: string; client_id: string | null; status: TaskStatus; due_date: string | null; notes: string | null; format: string | null; theme: string | null; networks: string[] };
+type Values = { title: string; client_id: string | null; status: TaskStatus; due_date: string | null; notes: string | null; format: string | null; theme: string | null; networks: string[]; started_at: string | null; finished_at: string | null };
 
 function EditDialog({ task, clients, names, formats, themes, accountsByClient, onClose, onSave, onDelete }: {
   task: Task | null; clients: ClientOpt[]; names: Record<string, string>; formats: string[]; themes: string[]; accountsByClient: Record<string, string[]>; onClose: () => void;
@@ -273,6 +284,7 @@ function EditDialog({ task, clients, names, formats, themes, accountsByClient, o
               status: String(f.get("status")) as TaskStatus, due_date: String(f.get("due_date") ?? "") || null,
               notes: String(f.get("notes") ?? "") || null,
               format: normalizeFormat(format, allowsMultiFormat(nets)), theme: String(f.get("theme") ?? "") || null, networks: nets,
+              started_at: whenOf(f, "start"), finished_at: whenOf(f, "end"),
             });
             setPending(false);
             if (msg) setErr(msg); else ref.current?.close();
@@ -313,6 +325,11 @@ function EditDialog({ task, clients, names, formats, themes, accountsByClient, o
               </div>
             )}
             <p className="mt-1 text-xs text-slate-500">Ao concluir, o post nasce com estas redes. Cliente com uma rede só usa ela automaticamente.</p>
+          </div>
+          <div className="space-y-1.5 rounded-lg border border-dashed border-line p-2">
+            <CollectedAt prefix="start" label="Início" defaultDate={task.started_at ? spParts(task.started_at).date : ""} defaultTime={task.started_at ? spParts(task.started_at).time : ""} />
+            <CollectedAt prefix="end" label="Fim" defaultDate={task.finished_at ? spParts(task.finished_at).date : ""} defaultTime={task.finished_at ? spParts(task.finished_at).time : ""} />
+            <p className="text-xs text-slate-500">Preenchidos sozinhos ao mover para Em andamento (início) e Em revisão (fim). Dá para ajustar aqui.</p>
           </div>
           <div><label className="label">Anotações</label><textarea name="notes" rows={4} defaultValue={task.notes ?? ""} className="input" placeholder="Briefing, referências, links…" /></div>
           <div className="flex items-center justify-between gap-2 pt-1">

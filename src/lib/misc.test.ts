@@ -239,3 +239,14 @@ describe("formato múltiplo (Instagram)", () => {
     expect(normalizeFormat("", true)).toBeNull();
   });
 });
+
+import { durationLabel } from "./tasks";
+describe("duração do cartão", () => {
+  it("formata", () => {
+    expect(durationLabel("2026-11-18T17:00:00Z", "2026-11-18T18:15:00Z")).toBe("1h15");
+    expect(durationLabel("2026-11-18T17:00:00Z", "2026-11-18T17:45:00Z")).toBe("45min");
+    expect(durationLabel("2026-11-18T17:00:00Z", "2026-11-18T19:00:00Z")).toBe("2h");
+    expect(durationLabel(null, "2026-11-18T19:00:00Z")).toBe("");
+    expect(durationLabel("2026-11-18T19:00:00Z", "2026-11-18T17:00:00Z")).toBe("");
+  });
+});
