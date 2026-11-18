@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
-      <AppHeader title="Controle de Redes" nav={nav} canSwitch={access.modules.length > 1} />
+      <AppHeader title="Redes Sociais" nav={nav} canSwitch={access.modules.length > 1} />
       <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
     </div>
   );

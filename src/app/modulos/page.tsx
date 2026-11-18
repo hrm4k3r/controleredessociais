@@ -17,6 +17,7 @@ export default async function Modulos() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#131a2e] to-[#2b3a5e] p-6">
       <div className="w-full max-w-2xl">
+        <div className="mb-4 flex items-center gap-3 text-white"><span className="inline-block h-9 w-9 rounded-full bg-accent" /><span className="text-xl font-extrabold">Rixxer Hub</span></div>
         <h1 className="mb-1 text-2xl font-extrabold text-white">Qual gestão você quer abrir?</h1>
         <p className="mb-5 text-sm text-white/70">Você pode trocar de gestão a qualquer momento pelo menu.</p>
         {access.modules.length === 0 ? (

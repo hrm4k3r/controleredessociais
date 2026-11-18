@@ -22,7 +22,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
-      <AppHeader title="Gestão de Projetos" dot="bg-sky-400" nav={nav} canSwitch={access.modules.length > 1} />
+      <AppHeader title="Projetos de Software" dot="bg-sky-400" nav={nav} canSwitch={access.modules.length > 1} />
       <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
     </div>
   );

@@ -6,11 +6,11 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#131a2e] to-[#2b3a5e] p-6">
       <div className="w-full max-w-sm">
-        <div className="mb-5 flex items-center gap-3 text-white"><span className="inline-block h-9 w-9 rounded-full bg-accent" /><span className="text-xl font-extrabold">Controle de Redes</span></div>
+        <div className="mb-5 flex items-center gap-3 text-white"><span className="inline-block h-9 w-9 rounded-full bg-accent" /><span className="text-xl font-extrabold">Rixxer Hub</span></div>
       <form action={signIn} className="card w-full space-y-4 !p-6 shadow-2xl">
         <div>
           <h1 className="page-title">Entrar</h1>
-          <p className="text-sm text-slate-500">Acesso restrito</p>
+          <p className="text-sm text-slate-500">Acesso restrito à equipe</p>
         </div>
         {erro && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">E-mail ou senha incorretos.</p>}
         <div>

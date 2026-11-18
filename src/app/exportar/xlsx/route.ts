@@ -28,7 +28,7 @@ export async function GET() {
   return new NextResponse(buf as ArrayBuffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="controle-redes-sociais-${todayISO()}.xlsx"`,
+      "Content-Disposition": `attachment; filename="rixxer-hub-${todayISO()}.xlsx"`,
       "Cache-Control": "no-store",
     },
   });

@@ -1,6 +1,6 @@
-# Controle de Redes Sociais
+# Rixxer Hub
 
-Sistema web interno (acesso restrito, com senha) para controlar as redes sociais dos clientes da agência:
+Sistema web interno (acesso restrito, com senha) da Rixxer, com três gestões no mesmo pacote (redes sociais, projetos de software e financeiro). A gestão de redes controla as redes sociais dos clientes da agência:
 postagens, métricas semanais, resultado de cada post, painel, relatório em formato **Stories 1080×1920**
 (PNG + página pública por link), financeiro e envio semanal por e-mail.
 

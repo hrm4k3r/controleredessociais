@@ -13,7 +13,7 @@ export default async function ContaLayout({ children }: { children: React.ReactN
   nav.push(["/clientes", "Clientes"], ["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
-      <AppHeader title="Painel de Gestão" nav={nav} canSwitch={access.modules.length > 1} />
+      <AppHeader title="Conta" nav={nav} canSwitch={access.modules.length > 1} />
       <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
     </div>
   );
