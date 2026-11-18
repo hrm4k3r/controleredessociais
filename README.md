@@ -76,6 +76,7 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
 - **Domingo:** *Métricas* (seguidores, visualizações, alcance, interações, cliques por conta) e *Resultados* (números de cada post por rede).
 - **Segunda:** *Painel* (meta × feito, variação) e *Relatório* (comentário, próximos passos, PNG, link e envio).
 - **Tarefas:** quadro Kanban semanal (A fazer / Em andamento / Em revisão / Concluído) para organizar as postagens a criar; arraste os cartões, filtre por cliente e leve os pendentes para a próxima semana. Ao concluir, o cartão vira um post "Planejado" (se tiver cliente; uma vez só). Exige as migrações `20261118000002_tarefas.sql` e `20261118000003_tarefas_post.sql`.
+- **Autoria:** cartões e posts mostram quem criou (e quem concluiu/editou por último). Gravado por triggers do banco (migração `20261118000004_autoria.sql`); o nome vem de *Usuários*.
 - **Financeiro:** valor/vencimento por cliente e pagamentos do mês. **Cadastros:** metas, redes, e-mails e listas. **Backup:** XLSX/CSV em *Cadastros*.
 
 ## Regras de cálculo (testadas em `src/lib/lib.test.ts`)

@@ -6,21 +6,22 @@ import { addDays, isValidISO, todayISO, weekEnd, weekStart } from "@/lib/dates";
 import { isTaskStatus, type PostSync, type Task } from "@/lib/tasks";
 
 type R<T = object> = ({ ok: true } & T) | { ok: false; error: string };
-const COLS = "id,client_id,title,notes,status,due_date,week_start,position,post_id";
+const COLS = "id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at";
 
 /** Cartão concluído vira um post "Planejado" (uma vez só; quem posta e quando é definido depois, em Postagens). */
 async function syncPost(sb: SupabaseClient, id: string): Promise<PostSync> {
   const { data: t } = await sb.from("tasks").select(COLS).eq("id", id).single();
-  if (!t || t.status !== "concluido") return { post_id: (t?.post_id as string | null) ?? null, state: "na" };
-  if (t.post_id) return { post_id: t.post_id as string, state: "exists" };
-  if (!t.client_id) return { post_id: null, state: "no_client" };
+  const by = (t?.completed_by as string | null | undefined) ?? null;
+  if (!t || t.status !== "concluido") return { completed_by: by, post_id: (t?.post_id as string | null) ?? null, state: "na" };
+  if (t.post_id) return { completed_by: by, post_id: t.post_id as string, state: "exists" };
+  if (!t.client_id) return { completed_by: by, post_id: null, state: "no_client" };
   const today = todayISO();
   const post_date = (t.due_date as string | null) ?? (today >= t.week_start && today <= weekEnd(t.week_start as string) ? today : (t.week_start as string));
   const { data: post, error } = await sb.from("posts").insert({ post_date, client_id: t.client_id, status: "Planejado", summary: t.title, notes: t.notes }).select("id").single();
-  if (error || !post) return { post_id: null, state: "na" };
+  if (error || !post) return { completed_by: by, post_id: null, state: "na" };
   await sb.from("tasks").update({ post_id: post.id }).eq("id", id);
   revalidatePath("/", "layout");
-  return { post_id: post.id as string, state: "created" };
+  return { completed_by: by, post_id: post.id as string, state: "created" };
 }
 const clean = (v: string | null | undefined) => (v && v.trim() !== "" ? v.trim() : null);
 const optDate = (v: string | null | undefined) => (v && isValidISO(v) ? v : null);

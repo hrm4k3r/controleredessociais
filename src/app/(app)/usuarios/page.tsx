@@ -5,14 +5,14 @@ import { requireManager } from "@/lib/access";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
 import { ROLE_LABEL, canAssign, canManageTarget, type Role } from "@/lib/roles";
-import { changeRole, createUser, removeUser, setPassword } from "./actions";
+import { changeRole, createUser, removeUser, setDisplayName, setPassword } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const ERR: Record<string, string> = {
   email: "E-mail inválido.", senha: "A senha precisa ter pelo menos 8 caracteres.", existe: "Já existe um usuário com esse e-mail.",
   permissao: "Você não tem permissão para essa ação.", criar: "Não foi possível concluir. Tente novamente.",
-  chave: "SUPABASE_SERVICE_ROLE_KEY não está configurada no servidor (necessária para gerenciar usuários).",
+  nome: "Informe o nome.", chave: "SUPABASE_SERVICE_ROLE_KEY não está configurada no servidor (necessária para gerenciar usuários).",
 };
 
 export default async function Usuarios({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -55,7 +55,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
 
       <section className="card overflow-x-auto !p-0">
         <table className="w-full min-w-[760px]">
-          <thead><tr>{["Usuário", "Acesso", "Nova senha", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+          <thead><tr>{["Nome / e-mail", "Acesso", "Nova senha", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
           <tbody>
             {(members ?? []).map((m) => {
               const role = m.role as Role;
@@ -64,8 +64,17 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
               const canPass = mine || editable;
               return (
                 <tr key={m.user_id as string}>
-                  <td className="td"><div className="font-medium">{(m.display_name as string | null) ?? emailOf.get(m.user_id as string) ?? "—"}{mine && <span className="ml-2 text-xs text-slate-500">(você)</span>}</div>
-                    <div className="text-xs text-slate-500">{emailOf.get(m.user_id as string)}</div></td>
+                  <td className="td">
+                    {canPass ? (
+                      <form action={setDisplayName} className="flex items-center gap-2">
+                        <input type="hidden" name="user_id" value={m.user_id as string} />
+                        <input name="name" required maxLength={60} defaultValue={(m.display_name as string | null) ?? ""} aria-label="Nome" className="input !w-40 font-medium" />
+                        <SubmitButton className="btn btn-ghost">Salvar</SubmitButton>
+                        {mine && <span className="text-xs text-slate-500">(você)</span>}
+                      </form>
+                    ) : <div className="font-medium">{(m.display_name as string | null) ?? "—"}</div>}
+                    <div className="mt-1 text-xs text-slate-500">{emailOf.get(m.user_id as string)}</div>
+                  </td>
                   <td className="td">
                     {editable ? (
                       <form action={changeRole} className="flex items-center gap-2">

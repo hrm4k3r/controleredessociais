@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DateInput from "@/components/DateInput";
 import { fmtDiaMes, todayISO } from "@/lib/dates";
 import Link from "next/link";
+import Author from "@/components/Author";
 import { positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
 import { carryOver, createTask, deleteTask, moveTask, updateTask } from "@/app/(app)/tarefas/actions";
 
@@ -13,8 +14,8 @@ type ClientOpt = { id: string; name: string };
 const hue = (s: string) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 360, 7);
 const byPos = (a: Task, b: Task) => a.position - b.position;
 
-export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId }: {
-  week: string; initial: Task[]; clients: ClientOpt[]; nextWeekHref: string; defaultClientId?: string;
+export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId, names }: {
+  week: string; initial: Task[]; clients: ClientOpt[]; nextWeekHref: string; defaultClientId?: string; names: Record<string, string>;
 }) {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initial);
@@ -31,7 +32,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   const fail = (msg: string) => setError(msg);
   /** Aplica o resultado da geração automática de post (cartão concluído -> "Planejado"). */
   function applyPost(id: string, p: PostSync) {
-    if (p.post_id) setTasks((cur) => cur.map((x) => (x.id === id ? { ...x, post_id: p.post_id } : x)));
+    setTasks((cur) => cur.map((x) => (x.id === id ? { ...x, post_id: p.post_id ?? x.post_id, completed_by: p.completed_by } : x)));
     if (p.state === "created") setNotice({ text: "Post \"Planejado\" criado em Postagens a partir do cartão.", href: `/postagens/${p.post_id}` });
     else if (p.state === "no_client") setNotice({ text: "Cartão concluído sem cliente: nenhum post foi criado. Defina o cliente e salve o cartão para gerar.", warn: true });
   }
@@ -123,6 +124,12 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
                           {t.post_id && <Link href={`/postagens/${t.post_id}`} onClick={(e) => e.stopPropagation()} className="badge bg-blue-100 text-blue-800 hover:underline" draggable={false}>📌 Post planejado</Link>}
                         </div>
+                        {(t.created_by || t.completed_by) && (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+                            {t.created_by && <Author name={names[t.created_by] ?? "Usuário"} label="Criado por" />}
+                            {t.completed_by && <span className="inline-flex items-center gap-1 text-green-700">✔ <Author name={names[t.completed_by] ?? "Usuário"} label="Concluído por" /></span>}
+                          </div>
+                        )}
                       </article>
                     </div>
                   );
@@ -145,7 +152,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
       </div>
 
       <EditDialog
-        task={editing} clients={clients} onClose={() => setEditing(null)}
+        task={editing} clients={clients} names={names} onClose={() => setEditing(null)}
         onSave={async (t, v) => {
           const moved = v.status !== t.status;
           const position = moved ? positionAt(col(v.status).filter((x) => x.id !== t.id).map((x) => x.position), col(v.status).filter((x) => x.id !== t.id).length) : undefined;
@@ -200,8 +207,8 @@ function AddCard({ clients, defaultClientId, onAdd, onCancel }: {
 
 type Values = { title: string; client_id: string | null; status: TaskStatus; due_date: string | null; notes: string | null };
 
-function EditDialog({ task, clients, onClose, onSave, onDelete }: {
-  task: Task | null; clients: ClientOpt[]; onClose: () => void;
+function EditDialog({ task, clients, names, onClose, onSave, onDelete }: {
+  task: Task | null; clients: ClientOpt[]; names: Record<string, string>; onClose: () => void;
   onSave: (t: Task, v: Values) => Promise<string | null>; onDelete: (t: Task) => Promise<string | null>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -237,6 +244,10 @@ function EditDialog({ task, clients, onClose, onSave, onDelete }: {
           }}
         >
           <h2 className="text-lg font-bold text-navy">Editar cartão</h2>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+            {task.created_by && <span className="inline-flex items-center gap-1">Criado por <Author name={names[task.created_by] ?? "Usuário"} /> em {fmtDiaMes(task.created_at.slice(0, 10))}</span>}
+            {task.completed_by && <span className="inline-flex items-center gap-1 text-green-700">Concluído por <Author name={names[task.completed_by] ?? "Usuário"} /></span>}
+          </div>
           {err && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">{err}</div>}
           <div><label className="label">Título</label><input name="title" required defaultValue={task.title} className="input" /></div>
           <div className="grid gap-3 sm:grid-cols-2">

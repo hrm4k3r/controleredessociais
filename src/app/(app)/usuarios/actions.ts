@@ -33,7 +33,7 @@ export async function createUser(fd: FormData) {
   if (!sb) return back("erro=chave");
   const { data, error } = await sb.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) return back(/already|registered|exists/i.test(error?.message ?? "") ? "erro=existe" : "erro=criar");
-  const { error: e2 } = await sb.from("organization_members").insert({ organization_id: me.orgId, user_id: data.user.id, role, display_name: name });
+  const { error: e2 } = await sb.from("organization_members").insert({ organization_id: me.orgId, user_id: data.user.id, role, display_name: name ?? email.split("@")[0] });
   if (e2) {
     await sb.auth.admin.deleteUser(data.user.id);
     back("erro=criar");
@@ -56,6 +56,17 @@ export async function changeRole(fd: FormData) {
   const role = String(fd.get("role") ?? "");
   if (t.userId === me.userId || !isRole(role) || !canManageTarget(me.role, t.role) || !canAssign(me.role, role)) back("erro=permissao");
   const { error } = await t.sb.from("organization_members").update({ role }).eq("organization_id", me.orgId).eq("user_id", t.userId);
+  if (error) back("erro=criar");
+  back("ok=1");
+}
+
+export async function setDisplayName(fd: FormData) {
+  const me = await requireManager(await createClient());
+  const t = await targetOf(fd, me.orgId);
+  const name = String(fd.get("name") ?? "").trim().slice(0, 60);
+  if (!name) back("erro=nome");
+  if (t.userId !== me.userId && !canManageTarget(me.role, t.role)) back("erro=permissao");
+  const { error } = await t.sb.from("organization_members").update({ display_name: name }).eq("organization_id", me.orgId).eq("user_id", t.userId);
   if (error) back("erro=criar");
   back("ok=1");
 }

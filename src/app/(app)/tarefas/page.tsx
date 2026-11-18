@@ -3,6 +3,7 @@ import { addDays } from "@/lib/dates";
 import { one, weekParam } from "@/lib/params";
 import { WeekBar } from "@/components/ui";
 import Kanban from "@/components/Kanban";
+import { loadMemberNames } from "@/lib/members";
 import type { Task } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +16,12 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
   const [{ data: clients }, tasksRes] = await Promise.all([
     sb.from("clients").select("id,name").eq("active", true).order("sort"),
     (() => {
-      let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position,post_id").eq("week_start", week).order("position");
+      let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at").eq("week_start", week).order("position");
       if (clientFilter) q = q.eq("client_id", clientFilter);
       return q;
     })(),
   ]);
+  const names = await loadMemberNames(sb);
   const nextWeek = new URLSearchParams({ semana: addDays(week, 7), ...(clientFilter ? { cliente: clientFilter } : {}) });
 
   return (
@@ -43,7 +45,7 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
         </div>
       ) : (
         <Kanban
-          key={`${week}|${clientFilter}`} week={week} initial={(tasksRes.data ?? []) as Task[]}
+          key={`${week}|${clientFilter}`} week={week} names={names} initial={(tasksRes.data ?? []) as Task[]}
           clients={(clients ?? []).map((c) => ({ id: c.id as string, name: c.name as string }))}
           nextWeekHref={`/tarefas?${nextWeek.toString()}`} defaultClientId={clientFilter || undefined}
         />

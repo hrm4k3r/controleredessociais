@@ -6,6 +6,8 @@ import { one, ok as okParam, weekParam } from "@/lib/params";
 import { Flash, WeekBar } from "@/components/ui";
 import PostForm from "@/components/PostForm";
 import StatusSelect from "@/components/StatusSelect";
+import Author from "@/components/Author";
+import { loadMemberNames } from "@/lib/members";
 import { savePost } from "./actions";
 
 export default async function Postagens({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -23,6 +25,10 @@ export default async function Postagens({ searchParams }: { searchParams: Promis
     .sort((a, b) => a.post_date.localeCompare(b.post_date));
   const netsOf = (id: string) => ds.postNetworks.filter((n) => n.post_id === id).map((n) => n.network);
   const today = todayISO();
+  // Autoria: consulta separada e tolerante (funciona mesmo antes da migração de autoria).
+  const { data: authorRows } = posts.length ? await sb.from("posts").select("id,created_by,updated_by").in("id", posts.map((p) => p.id)) : { data: [] };
+  const authors = new Map((authorRows ?? []).map((r) => [r.id as string, r as { created_by: string | null; updated_by: string | null }]));
+  const names = await loadMemberNames(sb);
 
   return (
     <div className="space-y-5">
@@ -48,10 +54,10 @@ export default async function Postagens({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="card overflow-x-auto !p-0">
-        <table className="w-full min-w-[820px]">
-          <thead><tr>{["Data", "Cliente", "Formato", "Tema", "Redes", "Resumo", "Status", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+        <table className="w-full min-w-[980px]">
+          <thead><tr>{["Data", "Cliente", "Formato", "Tema", "Redes", "Resumo", "Criado por", "Status", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
           <tbody>
-            {posts.length === 0 && <tr><td className="td text-slate-500" colSpan={8}>Nenhum post nesta semana{clientFilter ? " para este cliente" : ""}.</td></tr>}
+            {posts.length === 0 && <tr><td className="td text-slate-500" colSpan={9}>Nenhum post nesta semana{clientFilter ? " para este cliente" : ""}.</td></tr>}
             {posts.map((p) => (
               <tr key={p.id} className="hover:bg-orange-50/40">
                 <td className="td whitespace-nowrap">{diaSemana(p.post_date)} {fmtDiaMes(p.post_date)}</td>
@@ -60,6 +66,9 @@ export default async function Postagens({ searchParams }: { searchParams: Promis
                 <td className="td">{p.theme ?? "—"}</td>
                 <td className="td">{netsOf(p.id).join(", ") || <span className="text-red-600">nenhuma</span>}</td>
                 <td className="td max-w-xs truncate" title={p.summary ?? ""}>{p.summary}</td>
+                <td className="td whitespace-nowrap text-xs" title={authors.get(p.id)?.updated_by ? `Última edição: ${names[authors.get(p.id)!.updated_by!] ?? "Usuário"}` : undefined}>
+                  <Author name={authors.get(p.id)?.created_by ? names[authors.get(p.id)!.created_by!] ?? "Usuário" : null} label="Criado por" />
+                </td>
                 <td className="td"><StatusSelect id={p.id} status={p.status} /></td>
                 <td className="td whitespace-nowrap">
                   {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" className="mr-3 text-accent underline">link</a>}
