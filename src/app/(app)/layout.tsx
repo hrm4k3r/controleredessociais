@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
 import { canManageUsers } from "@/lib/roles";
 import AppHeader from "@/components/AppHeader";
+import PomodoroDock from "@/components/PomodoroDock";
 
 const NAV: [string, string][] = [
   ["/", "Painel"],
@@ -28,6 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <AppHeader title="Redes Sociais" nav={nav} canSwitch={access.modules.length > 1} />
       <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
+      <PomodoroDock />
     </div>
   );
 }

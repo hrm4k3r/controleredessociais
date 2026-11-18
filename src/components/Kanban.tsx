@@ -9,6 +9,7 @@ import Author from "@/components/Author";
 import FormatPicker from "@/components/FormatPicker";
 import { allowsMultiFormat, normalizeFormat, splitFormats } from "@/lib/format";
 import CollectedAt from "@/components/CollectedAt";
+import { LS_TIMER, type Pomo } from "@/lib/pomodoro";
 import { durationLabel, positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
 import { carryOver, createTask, deleteTask, moveTask, updateTask } from "@/app/(app)/tarefas/actions";
 
@@ -19,6 +20,7 @@ const hue = (s: string) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) 
 const clock = (iso: string, today: string) => { const p = spParts(iso); return p.date === today ? p.time : `${p.date.slice(8)}/${p.date.slice(5, 7)} ${p.time}`; };
 /** Lê data+hora de um par de campos do formulário; vazio = null (limpa). */
 const whenOf = (f: FormData, k: string): string | null => spToISO(String(f.get(`${k}|date`) ?? ""), String(f.get(`${k}|time`) ?? ""));
+const durationFocus = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min}min`);
 const byPos = (a: Task, b: Task) => a.position - b.position;
 
 export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId, names, formats, themes, accountsByClient }: {
@@ -33,8 +35,20 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   const [editing, setEditing] = useState<Task | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; href?: string; warn?: boolean } | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const today = todayISO();
+  useEffect(() => {
+    try { const s = JSON.parse(localStorage.getItem(LS_TIMER) ?? "null") as Pomo | null; setActiveId(s && s.phase === "focus" ? s.taskId : null); } catch { /* sem armazenamento */ }
+    const onActive = (e: Event) => setActiveId((e as CustomEvent<{ taskId: string | null }>).detail.taskId);
+    const onDone = (e: Event) => {
+      const d = (e as CustomEvent<{ taskId: string; pomodoros: number; focus_minutes: number }>).detail;
+      setTasks((cur) => cur.map((x) => (x.id === d.taskId ? { ...x, pomodoros: d.pomodoros, focus_minutes: d.focus_minutes } : x)));
+    };
+    window.addEventListener("pomodoro:active", onActive);
+    window.addEventListener("pomodoro:done", onDone);
+    return () => { window.removeEventListener("pomodoro:active", onActive); window.removeEventListener("pomodoro:done", onDone); };
+  }, []);
   const clientName = new Map(clients.map((c) => [c.id, c.name]));
   const col = (id: TaskStatus) => tasks.filter((t) => t.status === id).sort(byPos);
   const fail = (msg: string) => setError(msg);
@@ -64,6 +78,21 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
       const r = await moveTask(t.id, target, position);
       if (!r.ok) { setTasks(snapshot); fail(r.error); } else applyPost(t.id, r.post);
     });
+  }
+
+  /** Inicia o Pomodoro no cartão; se ainda está em "A fazer", move para "Em andamento" (grava a hora de início). */
+  function focusOn(t: Task) {
+    if (activeId && activeId !== t.id && !window.confirm("Já existe um foco em andamento em outro cartão. Trocar? O ciclo atual não será contado.")) return;
+    if (t.status === "a_fazer") {
+      const position = positionAt(col("em_andamento").map((x) => x.position), col("em_andamento").length);
+      const snapshot = tasks;
+      setTasks(tasks.map((x) => (x.id === t.id ? { ...x, status: "em_andamento", position } : x)));
+      start(async () => {
+        const r = await moveTask(t.id, "em_andamento", position);
+        if (!r.ok) { setTasks(snapshot); fail(r.error); } else applyPost(t.id, r.post);
+      });
+    }
+    window.dispatchEvent(new CustomEvent("pomodoro:start", { detail: { taskId: t.id, title: t.title } }));
   }
 
   async function add(status: TaskStatus, title: string, client_id: string | null, format: string | null, theme: string | null, networks: string[]) {
@@ -135,6 +164,13 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
                           {t.post_id && <Link href={`/postagens/${t.post_id}`} onClick={(e) => e.stopPropagation()} className="badge bg-blue-100 text-blue-800 hover:underline" draggable={false}>📌 Post planejado</Link>}
                         </div>
+                        {(t.pomodoros ?? 0) > 0 && <div className="mt-2 text-xs text-slate-600" title="Ciclos de foco concluídos">🍅 {t.pomodoros} · {durationFocus(t.focus_minutes ?? 0)} de foco</div>}
+                        {t.status !== "concluido" && (
+                          <button type="button" draggable={false} onClick={(e) => { e.stopPropagation(); focusOn(t); }}
+                            className={`mt-2 rounded-lg border px-2 py-1 text-xs font-semibold ${activeId === t.id ? "border-accent bg-orange-50 text-accent" : "border-line text-slate-600 hover:border-accent hover:text-accent"}`}>
+                            {activeId === t.id ? "🍅 em foco" : "▶ Foco"}
+                          </button>
+                        )}
                         {t.started_at && (
                           <div className="mt-2 text-xs text-slate-600" title="Hora de início e de fim">
                             ▶ {clock(t.started_at, today)}{t.finished_at && <> · ■ {clock(t.finished_at, today)}{durationLabel(t.started_at, t.finished_at) && <span className="font-semibold"> · {durationLabel(t.started_at, t.finished_at)}</span>}</>}

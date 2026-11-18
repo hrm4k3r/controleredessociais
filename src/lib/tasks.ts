@@ -14,6 +14,8 @@ export type Task = {
   format: string | null; theme: string | null; networks: string[];
   /** Hora em que foi para "Em andamento" / para "Em revisão" (preenchidas ao mover o cartão). */
   started_at: string | null; finished_at: string | null;
+  /** Pomodoros concluídos e minutos de foco acumulados neste cartão. */
+  pomodoros?: number; focus_minutes?: number;
 };
 
 /** Resultado da geração automática do post "Planejado" ao concluir um cartão. */

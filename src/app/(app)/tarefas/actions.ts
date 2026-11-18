@@ -86,3 +86,15 @@ export async function carryOver(week: string): Promise<R<{ count: number }>> {
   const { data, error } = await sb.from("tasks").update({ week_start: addDays(from, 7) }).eq("week_start", from).neq("status", "concluido").select("id");
   return error ? { ok: false, error: error.message } : { ok: true, count: data?.length ?? 0 };
 }
+
+/** Soma um ciclo de foco concluído ao cartão (contagem e minutos). */
+export async function addPomodoro(taskId: string, minutes: number): Promise<R<{ pomodoros: number; focus_minutes: number }>> {
+  if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 240) return { ok: false, error: "Tempo inválido." };
+  const sb = await createClient();
+  const { data, error } = await sb.from("tasks").select("pomodoros,focus_minutes").eq("id", taskId).single();
+  if (error || !data) return { ok: false, error: error?.message ?? "Cartão não encontrado." };
+  const next = { pomodoros: Number(data.pomodoros ?? 0) + 1, focus_minutes: Number(data.focus_minutes ?? 0) + Math.round(minutes) };
+  const { error: e2 } = await sb.from("tasks").update(next).eq("id", taskId);
+  if (e2) return { ok: false, error: e2.message };
+  return { ok: true, ...next };
+}

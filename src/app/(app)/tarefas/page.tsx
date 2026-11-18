@@ -22,6 +22,8 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
       const base = "id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at,format,theme,networks";
       const run = (cols: string) => { let q = sb.from("tasks").select(cols).eq("week_start", week).order("position"); if (clientFilter) q = q.eq("client_id", clientFilter); return q; };
       // Início/fim: se a migração 13 ainda não rodou, carrega sem eles.
+      const full = await run(`${base},started_at,finished_at,pomodoros,focus_minutes`);
+      if (!full.error) return full;
       const withTimes = await run(`${base},started_at,finished_at`);
       return withTimes.error ? run(base) : withTimes;
     })(),

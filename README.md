@@ -73,6 +73,7 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
 
 - **Todo dia:** *Postagens → Novo post* (data, cliente, status, formato, tema, redes em que saiu). Só “Postado” conta para a meta;
   um post em várias redes conta 1.
+- **Pomodoro:** botão ▶ Foco em cada cartão (move para Em andamento se estava em A fazer). Timer flutuante 25/5/15 (configurável), com som e aviso, que continua ao trocar de página; cada ciclo concluído soma 🍅 e minutos de foco ao cartão. Início/fim (Em andamento → Em revisão) também ficam gravados. Exige as migrações `...013_tarefas_inicio_fim.sql` e `...014_tarefas_pomodoro.sql`. Esses dados alimentarão o relatório de tempo (somente administradores).
 - **Hora da coleta:** em *Métricas*, cada cliente tem "Dados coletados em [data] às [hora]" (vem preenchido com o momento atual; o botão *Agora* atualiza). Aparece no PNG, na página pública e no e-mail do relatório. Exige a migração `20261118000011_hora_coleta.sql`.
 - **Domingo:** *Métricas* (seguidores, visualizações, alcance, interações, cliques por conta) e *Resultados* (números de cada post por rede).
 - **Segunda:** *Painel* (meta × feito, variação) e *Relatório* (comentário, próximos passos, PNG, link e envio).

@@ -250,3 +250,24 @@ describe("duração do cartão", () => {
     expect(durationLabel("2026-11-18T19:00:00Z", "2026-11-18T17:00:00Z")).toBe("");
   });
 });
+
+import { advance, clampCfg, DEFAULT_CFG, fmtClock, startFocus } from "./pomodoro";
+describe("pomodoro", () => {
+  it("foco → pausa curta → pausa longa no 4º ciclo", () => {
+    const t0 = 1_000_000;
+    let p = startFocus("t", "Tarefa", DEFAULT_CFG, t0);
+    expect(p.endsAt).toBe(t0 + 25 * 60000);
+    let r = advance(p, DEFAULT_CFG, t0);
+    expect(r).toMatchObject({ completedFocus: true, next: { phase: "short", done: 1 } });
+    r = advance(r.next, DEFAULT_CFG, t0);
+    expect(r).toMatchObject({ completedFocus: false, next: { phase: "ready", endsAt: null } });
+    p = { ...p, done: 3 };
+    expect(advance(p, DEFAULT_CFG, t0).next.phase).toBe("long");
+  });
+  it("relógio e limites", () => {
+    expect(fmtClock(25 * 60000)).toBe("25:00");
+    expect(fmtClock(61_000)).toBe("01:01");
+    expect(fmtClock(-5)).toBe("00:00");
+    expect(clampCfg({ focus: 0, short: 999, long: NaN, every: 1 })).toEqual({ focus: 1, short: 60, long: 15, every: 2 });
+  });
+});
