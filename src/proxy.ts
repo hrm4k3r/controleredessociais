@@ -31,7 +31,7 @@ export async function proxy(req: NextRequest) {
   }
   if (data.user && pathname.startsWith("/login")) {
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/modulos";
     return NextResponse.redirect(url);
   }
   return res;

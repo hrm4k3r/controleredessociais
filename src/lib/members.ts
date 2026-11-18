@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { effectiveModules, type ModuleId } from "@/lib/modules";
 
 const local = (email?: string | null) => (email ? email.split("@")[0] : "");
 
@@ -24,4 +25,17 @@ export async function loadMemberNames(sb: SupabaseClient): Promise<Record<string
     }
   }
   return names;
+}
+
+export type Member = { id: string; name: string; role: string; modules: ModuleId[] };
+
+/** Membros da organização com nome e gestões liberadas (para escolher responsáveis, etc.). */
+export async function loadMembers(sb: SupabaseClient, orgModules: ModuleId[]): Promise<Member[]> {
+  const names = await loadMemberNames(sb);
+  let res = await sb.from("organization_members").select("user_id,role,modules");
+  if (res.error) res = (await sb.from("organization_members").select("user_id,role")) as typeof res;
+  return ((res.data ?? []) as { user_id: string; role: string; modules?: unknown }[]).map((m) => ({
+    id: m.user_id, name: names[m.user_id] ?? "Usuário", role: m.role,
+    modules: effectiveModules({ org: orgModules, member: m.modules ?? null, role: m.role }),
+  }));
 }

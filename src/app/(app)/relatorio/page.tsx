@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { one, ok as okParam, weekParam } from "@/lib/params";
 import { Flash, WeekBar } from "@/components/ui";
+import { socialClientFilter } from "@/lib/social-clients";
 import { publicLink } from "@/lib/report-data";
 import { createLink, regenerateLink, saveNotes } from "./actions";
 
@@ -13,7 +14,8 @@ export default async function Relatorio({ searchParams }: { searchParams: Promis
   const week = weekParam(sp);
   const env = /^\d+-\d+-\d+$/.test(one(sp.env) ?? "") ? one(sp.env)!.split("-") : null;
   const sb = await createClient();
-  const { data: clients } = await sb.from("clients").select("id,name,is_internal").eq("active", true).order("sort");
+  const onlySocial = await socialClientFilter(sb);
+  const { data: clients } = await onlySocial(sb.from("clients").select("id,name,is_internal").eq("active", true)).order("sort");
   const list = clients ?? [];
   const clientId = list.some((c) => c.id === one(sp.cliente)) ? one(sp.cliente)! : list[0]?.id;
   if (!clientId) return <p>Cadastre um cliente primeiro.</p>;

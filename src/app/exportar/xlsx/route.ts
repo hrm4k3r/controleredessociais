@@ -12,8 +12,10 @@ export async function GET() {
   const sb = await createClient();
   const { data } = await sb.auth.getUser();
   if (!data.user) return new NextResponse("Não autorizado", { status: 401 });
+  const acc = await getAccess(sb);
+  if (!acc?.modules.includes("social")) return new NextResponse("Sem acesso a esta gestão", { status: 403 });
   const wb = new ExcelJS.Workbook();
-  for (const t of Object.values(await buildTables(sb, canSeeFinance((await getAccess(sb))?.role)))) {
+  for (const t of Object.values(await buildTables(sb, canSeeFinance(acc.role)))) {
     const ws = wb.addWorksheet(t.name);
     ws.addRow(t.headers).font = { bold: true };
     t.rows.forEach((r) => ws.addRow(r));

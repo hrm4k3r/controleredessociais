@@ -1,5 +1,6 @@
 import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
+import { socialClientFilter } from "@/lib/social-clients";
 import { getAccess } from "@/lib/access";
 import { canSeeFinance } from "@/lib/roles";
 import { loadLists } from "@/lib/data";
@@ -14,8 +15,9 @@ const ERR: Record<string, string> = { nome: "Informe o nome do cliente.", email:
 export default async function Cadastros({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const sb = await createClient();
+  const onlySocial = await socialClientFilter(sb);
   const [{ data: clients }, { data: accounts }, { data: emails }, lists] = await Promise.all([
-    sb.from("clients").select("id,name,is_internal,weekly_goal,sort").eq("active", true).order("sort"),
+    onlySocial(sb.from("clients").select("id,name,is_internal,weekly_goal,sort").eq("active", true)).order("sort"),
     sb.from("accounts").select("client_id,network"),
     sb.from("client_emails").select("id,client_id,email,name").order("email"),
     loadLists(sb),

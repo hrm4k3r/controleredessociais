@@ -71,3 +71,40 @@ describe("kanban", () => {
     expect(positionAt([1000, 2000], 2)).toBe(3000);
   });
 });
+
+import { effectiveModules, parseModules } from "./modules";
+import { parseHours, progress, isLate } from "./dev";
+describe("módulos", () => {
+  it("parseModules ignora valores inválidos", () => {
+    expect(parseModules(["social", "x", "dev", "dev"])).toEqual(["social", "dev"]);
+    expect(parseModules("social, dev")).toEqual(["social", "dev"]);
+    expect(parseModules(null)).toEqual([]);
+  });
+  it("acesso efetivo = contratado ∩ liberado ao usuário", () => {
+    const org = ["social", "dev"];
+    expect(effectiveModules({ org, member: null, role: "colaborador" })).toEqual(["social", "dev"]);
+    expect(effectiveModules({ org, member: ["dev"], role: "colaborador" })).toEqual(["dev"]);
+    expect(effectiveModules({ org, member: ["dev"], role: "owner" })).toEqual(["social", "dev"]);
+    expect(effectiveModules({ org: ["social"], member: ["dev", "social"], role: "admin" })).toEqual(["social"]);
+    expect(effectiveModules({ org, member: null, role: "owner", env: "dev" })).toEqual(["dev"]);
+    expect(effectiveModules({ org, member: [], role: "colaborador" })).toEqual([]);
+  });
+});
+describe("projetos de software", () => {
+  it("progresso", () => {
+    expect(progress([])).toEqual({ done: 0, total: 0, open: 0, pct: 0 });
+    expect(progress([{ status: "concluido" }, { status: "a_fazer" }, { status: "teste" }, { status: "concluido" }]).pct).toBe(50);
+  });
+  it("horas", () => {
+    expect(parseHours("1,5")).toBe(1.5);
+    expect(parseHours("1:30")).toBe(1.5);
+    expect(parseHours("0")).toBeNull();
+    expect(parseHours("25")).toBeNull();
+    expect(parseHours("abc")).toBeNull();
+  });
+  it("atraso", () => {
+    expect(isLate("2026-11-01", "a_fazer", "2026-11-18")).toBe(true);
+    expect(isLate("2026-11-01", "concluido", "2026-11-18")).toBe(false);
+    expect(isLate(null, "a_fazer", "2026-11-18")).toBe(false);
+  });
+});

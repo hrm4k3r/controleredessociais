@@ -5,6 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireManager } from "@/lib/access";
 import { canAssign, canManageTarget, type Role } from "@/lib/roles";
+import { parseModules, type ModuleId } from "@/lib/modules";
+
+/** Lê os módulos marcados; devolve null quando equivalem a "todos os contratados" (sem restrição). undefined = inválido. */
+function pickModules(fd: FormData, orgModules: ModuleId[]): ModuleId[] | null | undefined {
+  const chosen = parseModules(fd.getAll("mod").map(String)).filter((m) => orgModules.includes(m));
+  if (chosen.length === 0) return undefined;
+  return chosen.length === orgModules.length ? null : chosen;
+}
 
 const back = (q: string): never => {
   revalidatePath("/usuarios");
@@ -29,11 +37,13 @@ export async function createUser(fd: FormData) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) back("erro=email");
   if (password.length < 8) back("erro=senha");
   if (!isRole(role) || !canAssign(me.role, role)) back("erro=permissao");
+  const mods = pickModules(fd, me.orgModules);
+  if (mods === undefined) back("erro=modulo");
   const sb = admin();
   if (!sb) return back("erro=chave");
   const { data, error } = await sb.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) return back(/already|registered|exists/i.test(error?.message ?? "") ? "erro=existe" : "erro=criar");
-  const { error: e2 } = await sb.from("organization_members").insert({ organization_id: me.orgId, user_id: data.user.id, role, display_name: name ?? email.split("@")[0] });
+  const { error: e2 } = await sb.from("organization_members").insert({ organization_id: me.orgId, user_id: data.user.id, role, display_name: name ?? email.split("@")[0], modules: mods });
   if (e2) {
     await sb.auth.admin.deleteUser(data.user.id);
     back("erro=criar");
@@ -56,6 +66,17 @@ export async function changeRole(fd: FormData) {
   const role = String(fd.get("role") ?? "");
   if (t.userId === me.userId || !isRole(role) || !canManageTarget(me.role, t.role) || !canAssign(me.role, role)) back("erro=permissao");
   const { error } = await t.sb.from("organization_members").update({ role }).eq("organization_id", me.orgId).eq("user_id", t.userId);
+  if (error) back("erro=criar");
+  back("ok=1");
+}
+
+export async function setModules(fd: FormData) {
+  const me = await requireManager(await createClient());
+  const t = await targetOf(fd, me.orgId);
+  const mods = pickModules(fd, me.orgModules);
+  if (mods === undefined) back("erro=modulo");
+  if (t.userId === me.userId || !canManageTarget(me.role, t.role)) back("erro=permissao");
+  const { error } = await t.sb.from("organization_members").update({ modules: mods }).eq("organization_id", me.orgId).eq("user_id", t.userId);
   if (error) back("erro=criar");
   back("ok=1");
 }

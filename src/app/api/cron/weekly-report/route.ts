@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { socialClientFilter } from "@/lib/social-clients";
 import { lastClosedWeekStart } from "@/lib/dates";
 import { sendReport } from "@/lib/email";
 
@@ -19,7 +20,8 @@ export async function GET(req: Request) {
 
   const sb = createAdminClient();
   const week = lastClosedWeekStart();
-  const { data: clients } = await sb.from("clients").select("id,name").eq("active", true).eq("is_internal", false);
+  const onlySocial = await socialClientFilter(sb);
+  const { data: clients } = await onlySocial(sb.from("clients").select("id,name").eq("active", true).eq("is_internal", false));
   const out: Record<string, unknown>[] = [];
   for (const c of clients ?? []) {
     const { data: emails } = await sb.from("client_emails").select("email").eq("client_id", c.id);

@@ -1,3 +1,4 @@
+import { socialClientFilter } from "./social-clients";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Account, Client, Dataset, Post, PostNetwork, PostResult, WeeklyMetric } from "./types";
 
@@ -19,7 +20,8 @@ export async function fetchAll<T>(build: (from: number, to: number) => PromiseLi
 export async function loadDataset(sb: SupabaseClient, clientId?: string): Promise<Dataset> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const byClient = (q: any, col = "client_id") => (clientId ? q.eq(col, clientId) : q);
-  const clients = await fetchAll<Client>((a, b) => byClient(sb.from("clients").select("id,name,is_internal,weekly_goal,sort").eq("active", true), "id").order("sort").range(a, b));
+  const onlySocial = await socialClientFilter(sb);
+  const clients = await fetchAll<Client>((a, b) => byClient(onlySocial(sb.from("clients").select("id,name,is_internal,weekly_goal,sort").eq("active", true)), "id").order("sort").range(a, b));
   const accounts = await fetchAll<Account>((a, b) => byClient(sb.from("accounts").select("id,client_id,network")).order("network").range(a, b));
   const posts = await fetchAll<Post>((a, b) => byClient(sb.from("posts").select("id,post_date,client_id,status,format,theme,summary,link,notes")).order("post_date").order("id").range(a, b));
   const ids = new Set(posts.map((p) => p.id));

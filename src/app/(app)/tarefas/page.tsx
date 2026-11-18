@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addDays } from "@/lib/dates";
 import { one, weekParam } from "@/lib/params";
 import { WeekBar } from "@/components/ui";
+import { socialClientFilter } from "@/lib/social-clients";
 import Kanban from "@/components/Kanban";
 import { loadMemberNames } from "@/lib/members";
 import type { Task } from "@/lib/tasks";
@@ -13,8 +14,9 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
   const week = weekParam(sp);
   const clientFilter = one(sp.cliente) ?? "";
   const sb = await createClient();
+  const onlySocial = await socialClientFilter(sb);
   const [{ data: clients }, tasksRes] = await Promise.all([
-    sb.from("clients").select("id,name").eq("active", true).order("sort"),
+    onlySocial(sb.from("clients").select("id,name").eq("active", true)).order("sort"),
     (() => {
       let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position,post_id,created_by,completed_by,created_at").eq("week_start", week).order("position");
       if (clientFilter) q = q.eq("client_id", clientFilter);

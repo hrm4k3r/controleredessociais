@@ -103,6 +103,21 @@ o que pertence a uma organização da qual é membro (`organization_members`, pa
 - **Migração obrigatória:** rode `supabase/migrations/20261118000001_papeis_financeiro.sql` no SQL Editor (aplica a RLS do Financeiro).
 - Permissões por cliente ainda não existem (previstas para uma migração futura).
 
+## Gestões (módulos) e venda do pacote
+
+O sistema tem duas gestões no mesmo pacote: **Redes Sociais** (`social`, rotas na raiz) e **Projetos de Software**
+(`dev`, rotas em `/dev`: Painel, Projetos com quadro Kanban, marcos de entrega, Minhas tarefas e Horas).
+Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, entra direto).
+
+- **Por organização (o que foi vendido):** coluna `organizations.modules` (padrão `{social,dev}`). Para vender só uma gestão:
+  `update organizations set modules = array['dev'] where slug = '...';`
+- **Por implantação (opcional):** variável `ENABLED_MODULES=social,dev` limita as gestões daquele deploy.
+- **Por usuário:** em *Usuários* marca-se quais gestões cada pessoa acessa (sem marcar nada = erro; todas = sem restrição).
+  O proprietário sempre acessa tudo que foi contratado. O usuário só vê o que foi liberado, e o banco (RLS, função `has_module`) também impede o acesso.
+- **Clientes** são compartilhados (`clients.modules`): clientes criados em Projetos não aparecem em Redes Sociais, e vice-versa,
+  a menos que o cliente seja usado nas duas gestões.
+- **Migrações:** `20261118000005_modulos.sql` e `20261118000006_dev_projetos.sql`.
+
 ## Segurança
 
 Login por e-mail/senha (Supabase Auth, sem cadastro público); `proxy.ts` bloqueia todas as rotas sem sessão, exceto

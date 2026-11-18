@@ -9,7 +9,7 @@ export async function signIn(formData: FormData) {
     password: String(formData.get("password") ?? ""),
   });
   if (error) redirect("/login?erro=1");
-  redirect("/");
+  redirect("/modulos");
 }
 
 export async function signOut() {

@@ -5,14 +5,15 @@ import { requireManager } from "@/lib/access";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
 import { ROLE_LABEL, canAssign, canManageTarget, type Role } from "@/lib/roles";
-import { changeRole, createUser, removeUser, setDisplayName, setPassword } from "./actions";
+import { moduleById, parseModules, type ModuleId } from "@/lib/modules";
+import { changeRole, createUser, removeUser, setDisplayName, setModules, setPassword } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const ERR: Record<string, string> = {
   email: "E-mail inválido.", senha: "A senha precisa ter pelo menos 8 caracteres.", existe: "Já existe um usuário com esse e-mail.",
   permissao: "Você não tem permissão para essa ação.", criar: "Não foi possível concluir. Tente novamente.",
-  nome: "Informe o nome.", chave: "SUPABASE_SERVICE_ROLE_KEY não está configurada no servidor (necessária para gerenciar usuários).",
+  nome: "Informe o nome.", modulo: "Selecione ao menos uma gestão para o usuário.", chave: "SUPABASE_SERVICE_ROLE_KEY não está configurada no servidor (necessária para gerenciar usuários).",
 };
 
 export default async function Usuarios({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -21,7 +22,20 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
   const me = await requireManager(sb);
   const erro = one(sp.erro);
 
-  const { data: members } = await sb.from("organization_members").select("user_id,role,display_name,created_at").eq("organization_id", me.orgId).order("created_at");
+  let mres = await sb.from("organization_members").select("user_id,role,display_name,created_at,modules").eq("organization_id", me.orgId).order("created_at");
+  if (mres.error) mres = (await sb.from("organization_members").select("user_id,role,display_name,created_at").eq("organization_id", me.orgId).order("created_at")) as typeof mres;
+  const members = mres.data as { user_id: string; role: string; display_name: string | null; modules?: string[] | null }[] | null;
+  const orgMods = me.orgModules;
+  const multi = orgMods.length > 1;
+  const ModChecks = ({ selected, disabled }: { selected: ModuleId[]; disabled?: boolean }) => (
+    <span className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+      {orgMods.map((id) => (
+        <label key={id} className="inline-flex items-center gap-1.5">
+          <input type="checkbox" name="mod" value={id} defaultChecked={selected.includes(id)} disabled={disabled} className="h-4 w-4" />{moduleById(id).name.replace("Gestão de ", "")}
+        </label>
+      ))}
+    </span>
+  );
   const emailOf = new Map<string, string>();
   let adminOk = true;
   try {
@@ -49,17 +63,19 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
             <label className="label">Acesso</label>
             <select name="role" className="input" defaultValue="colaborador">{assignable.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
           </div>
+          {multi && <div className="sm:col-span-2 lg:col-span-5"><label className="label">Gestões liberadas</label><ModChecks selected={orgMods} /></div>}
           <SubmitButton className="btn btn-accent" pendingText="Criando…">Criar usuário</SubmitButton>
         </form>
       </section>
 
       <section className="card overflow-x-auto !p-0">
-        <table className="w-full min-w-[760px]">
-          <thead><tr>{["Nome / e-mail", "Acesso", "Nova senha", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+        <table className="w-full min-w-[900px]">
+          <thead><tr>{["Nome / e-mail", "Acesso", ...(multi ? ["Gestões"] : []), "Nova senha", ""].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
           <tbody>
             {(members ?? []).map((m) => {
               const role = m.role as Role;
               const mine = m.user_id === me.userId;
+              const mods = m.modules == null ? orgMods : parseModules(m.modules).filter((x) => orgMods.includes(x));
               const editable = !mine && canManageTarget(me.role, role);
               const canPass = mine || editable;
               return (
@@ -84,6 +100,17 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
                       </form>
                     ) : ROLE_LABEL[role]}
                   </td>
+                  {multi && (
+                    <td className="td">
+                      {editable ? (
+                        <form action={setModules} className="flex flex-wrap items-center gap-2">
+                          <input type="hidden" name="user_id" value={m.user_id as string} />
+                          <ModChecks selected={mods} />
+                          <SubmitButton className="btn btn-ghost">Salvar</SubmitButton>
+                        </form>
+                      ) : <span className="text-sm text-slate-600">{role === "owner" ? "Todas" : mods.map((x) => moduleById(x).name.replace("Gestão de ", "")).join(", ") || "Nenhuma"}</span>}
+                    </td>
+                  )}
                   <td className="td">
                     {canPass && (
                       <form action={setPassword} className="flex items-center gap-2">
