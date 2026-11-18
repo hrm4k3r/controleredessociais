@@ -2,11 +2,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireFinance } from "@/lib/access";
 import { isValidISO } from "@/lib/dates";
 import { moneyField, textField, intField } from "@/lib/form";
 
 export async function saveFinanceCadastro(fd: FormData) {
   const sb = await createClient();
+  await requireFinance(sb);
   const rows = fd.getAll("id").map(String).map((client_id) => ({
     client_id,
     monthly_amount: moneyField(fd.get(`valor|${client_id}`)) ?? 0,
@@ -20,6 +22,7 @@ export async function saveFinanceCadastro(fd: FormData) {
 
 export async function savePayments(fd: FormData) {
   const sb = await createClient();
+  await requireFinance(sb);
   const mes = String(fd.get("mes"));
   if (!isValidISO(mes)) redirect("/financeiro");
   const ids = fd.getAll("id").map(String);

@@ -1,5 +1,7 @@
 import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
+import { getAccess } from "@/lib/access";
+import { canSeeFinance } from "@/lib/roles";
 import { loadLists } from "@/lib/data";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
@@ -19,6 +21,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
     loadLists(sb),
   ]);
   const erro = one(sp.erro);
+  const finance = canSeeFinance((await getAccess(sb))?.role);
 
   return (
     <div className="space-y-6">
@@ -116,7 +119,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
         <h2 className="font-bold text-navy">Backup (exportar dados)</h2>
         <div className="flex flex-wrap gap-2">
           <a className="btn" href="/exportar/xlsx">Baixar tudo (XLSX)</a>
-          {["clientes", "postagens", "resultados", "metricas", "pagamentos"].map((t) => <a key={t} className="btn btn-ghost" href={`/exportar/csv/${t}`}>{t}.csv</a>)}
+          {["clientes", "postagens", "resultados", "metricas", ...(finance ? ["pagamentos"] : [])].map((t) => <a key={t} className="btn btn-ghost" href={`/exportar/csv/${t}`}>{t}.csv</a>)}
         </div>
       </section>
     </div>

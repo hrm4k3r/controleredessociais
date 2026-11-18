@@ -41,3 +41,23 @@ describe("e-mail", () => {
     expect(m.html).not.toContain("<b> &");
   });
 });
+
+import { canAssign, canManageTarget, canSeeFinance } from "./roles";
+describe("papéis", () => {
+  it("só owner/admin veem o financeiro", () => {
+    expect(canSeeFinance("owner")).toBe(true);
+    expect(canSeeFinance("admin")).toBe(true);
+    expect(canSeeFinance("colaborador")).toBe(false);
+    expect(canSeeFinance(null)).toBe(false);
+  });
+  it("gestão de usuários", () => {
+    expect(canManageTarget("owner", "colaborador")).toBe(true);
+    expect(canManageTarget("owner", "owner")).toBe(false);
+    expect(canManageTarget("admin", "admin")).toBe(false);
+    expect(canManageTarget("admin", "colaborador")).toBe(true);
+    expect(canManageTarget("colaborador", "colaborador")).toBe(false);
+    expect(canAssign("admin", "admin")).toBe(false);
+    expect(canAssign("owner", "admin")).toBe(true);
+    expect(canAssign("owner", "owner")).toBe(false);
+  });
+});

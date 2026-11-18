@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
+import { getAccess } from "@/lib/access";
+import { canSeeFinance } from "@/lib/roles";
 import { buildTables } from "@/lib/export";
 import { todayISO } from "@/lib/dates";
 
@@ -11,7 +13,7 @@ export async function GET() {
   const { data } = await sb.auth.getUser();
   if (!data.user) return new NextResponse("Não autorizado", { status: 401 });
   const wb = new ExcelJS.Workbook();
-  for (const t of Object.values(await buildTables(sb))) {
+  for (const t of Object.values(await buildTables(sb, canSeeFinance((await getAccess(sb))?.role)))) {
     const ws = wb.addWorksheet(t.name);
     ws.addRow(t.headers).font = { bold: true };
     t.rows.forEach((r) => ws.addRow(r));

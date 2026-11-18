@@ -1,6 +1,7 @@
 import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { requireFinance } from "@/lib/access";
 import DateInput from "@/components/DateInput";
 import { addMonths, firstOfMonth, fmtData, fmtMes, isValidISO, todayISO } from "@/lib/dates";
 import { one, ok as okParam } from "@/lib/params";
@@ -22,6 +23,7 @@ export default async function Financeiro({ searchParams }: { searchParams: Promi
   const m = one(sp.mes);
   const mes = isValidISO(m) ? firstOfMonth(m) : firstOfMonth(today);
   const sb = await createClient();
+  await requireFinance(sb);
   const { clients, payments } = await loadFinance(sb);
   const totalMensal = clients.reduce((s, c) => s + c.monthly_amount, 0);
   const summaries = clients.map((c) => ({ c, s: summaryFor(c, payments, today) }));

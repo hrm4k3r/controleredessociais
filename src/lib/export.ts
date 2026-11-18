@@ -6,9 +6,10 @@ import { weekStart } from "./dates";
 
 export type Table = { name: string; headers: string[]; rows: (string | number | null)[][] };
 
-export async function buildTables(sb: SupabaseClient): Promise<Record<string, Table>> {
+/** `finance=false` (colaborador): sem a tabela de pagamentos e sem as colunas financeiras de clientes. */
+export async function buildTables(sb: SupabaseClient, finance = true): Promise<Record<string, Table>> {
   const ds = await loadDataset(sb);
-  const fin = await loadFinance(sb);
+  const fin = finance ? await loadFinance(sb) : { clients: [], payments: [] };
   const cname = new Map(ds.clients.map((c) => [c.id, c.name]));
   const post = new Map(ds.posts.map((p) => [p.id, p]));
   const emails = await fetchAll<{ client_id: string; email: string }>((a, b) => sb.from("client_emails").select("client_id,email").range(a, b));
@@ -17,11 +18,11 @@ export async function buildTables(sb: SupabaseClient): Promise<Record<string, Ta
   const t: Record<string, Table> = {};
   t.clientes = {
     name: "Clientes",
-    headers: ["Cliente", "Conta própria", "Meta posts/semana", "Redes", "E-mails", "Valor mensal (R$)", "Dia vencimento"],
+    headers: ["Cliente", "Conta própria", "Meta posts/semana", "Redes", "E-mails", ...(finance ? ["Valor mensal (R$)", "Dia vencimento"] : [])],
     rows: ds.clients.map((c) => {
       const f = fin.clients.find((x) => x.id === c.id);
       return [c.name, c.is_internal ? "sim" : "não", c.weekly_goal, ds.accounts.filter((a) => a.client_id === c.id).map((a) => a.network).join(", "),
-        emails.filter((e) => e.client_id === c.id).map((e) => e.email).join(", "), f ? f.monthly_amount : null, f ? f.due_day : null];
+        emails.filter((e) => e.client_id === c.id).map((e) => e.email).join(", "), ...(finance ? [f ? f.monthly_amount : null, f ? f.due_day : null] : [])];
     }),
   };
   t.postagens = {
@@ -45,7 +46,7 @@ export async function buildTables(sb: SupabaseClient): Promise<Record<string, Ta
     headers: ["Semana (segunda)", "Cliente", "Rede", "Seguidores", "Visualizações", "Alcance", "Interações", "Cliques/visitas", "Aprendizado / ação"],
     rows: ds.metrics.map((m) => [m.week_start, cname.get(m.client_id) ?? "", m.network, m.followers, m.views, m.reach, m.interactions, m.clicks, m.learning]),
   };
-  t.pagamentos = {
+  if (finance) t.pagamentos = {
     name: "Pagamentos",
     headers: ["Mês de referência", "Cliente", "Valor devido (R$)", "Data do pagamento", "Valor pago (R$)", "Observações"],
     rows: fin.payments.map((p) => [p.ref_month, cname.get(p.client_id) ?? "", p.amount_due, p.paid_date, p.paid_amount, p.notes]),

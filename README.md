@@ -93,8 +93,13 @@ o que pertence a uma organização da qual é membro (`organization_members`, pa
 
 - O **primeiro usuário** criado no Supabase vira `owner` da primeira organização (criada no seed) por um trigger.
 - Usuários seguintes **não** entram em nenhuma organização sozinhos: inclua-os em `organization_members`
-  (SQL Editor) com o `organization_id` e o `user_id` desejados; sem isso eles não enxergam dados.
-- Permissões finas por papel/cliente ainda não existem (previstas para uma migração futura).
+  (SQL Editor) — ou, mais simples, crie-os pela tela *Usuários*; usuários criados direto no painel do Supabase ficam sem dados.
+- **Papéis:** `owner` e `admin` veem tudo, inclusive o **Financeiro**; `colaborador` usa o resto do sistema, mas o
+  Financeiro fica bloqueado (menu, página, ações, exportações e, no banco, RLS de `client_finance` e `payments`).
+- **Usuários:** em *Usuários* (só owner/admin) cria-se o acesso com e-mail + senha inicial, troca-se papel/senha e remove-se.
+  Só o proprietário cria/edita administradores; admin gerencia colaboradores. Exige `SUPABASE_SERVICE_ROLE_KEY` no servidor.
+- **Migração obrigatória:** rode `supabase/migrations/20261118000001_papeis_financeiro.sql` no SQL Editor (aplica a RLS do Financeiro).
+- Permissões por cliente ainda não existem (previstas para uma migração futura).
 
 ## Segurança
 
