@@ -9,8 +9,11 @@ export const isTaskStatus = (v: string): v is TaskStatus => TASK_COLUMNS.some((c
 
 export type Task = {
   id: string; client_id: string | null; title: string; notes: string | null;
-  status: TaskStatus; due_date: string | null; week_start: string; position: number;
+  status: TaskStatus; due_date: string | null; week_start: string; position: number; post_id: string | null;
 };
+
+/** Resultado da geração automática do post "Planejado" ao concluir um cartão. */
+export type PostSync = { post_id: string | null; state: "created" | "exists" | "no_client" | "na" };
 
 /** Posição para inserir `index` numa lista ordenada de posições (sem o cartão movido). */
 export function positionAt(positions: number[], index: number): number {

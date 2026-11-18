@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import DateInput from "@/components/DateInput";
 import { fmtDiaMes, todayISO } from "@/lib/dates";
-import { positionAt, TASK_COLUMNS, type Task, type TaskStatus } from "@/lib/tasks";
+import Link from "next/link";
+import { positionAt, TASK_COLUMNS, type PostSync, type Task, type TaskStatus } from "@/lib/tasks";
 import { carryOver, createTask, deleteTask, moveTask, updateTask } from "@/app/(app)/tarefas/actions";
 
 type ClientOpt = { id: string; name: string };
@@ -22,11 +23,18 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   const [adding, setAdding] = useState<TaskStatus | null>(null);
   const [editing, setEditing] = useState<Task | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; href?: string; warn?: boolean } | null>(null);
   const [busy, start] = useTransition();
   const today = todayISO();
   const clientName = new Map(clients.map((c) => [c.id, c.name]));
   const col = (id: TaskStatus) => tasks.filter((t) => t.status === id).sort(byPos);
   const fail = (msg: string) => setError(msg);
+  /** Aplica o resultado da geração automática de post (cartão concluído -> "Planejado"). */
+  function applyPost(id: string, p: PostSync) {
+    if (p.post_id) setTasks((cur) => cur.map((x) => (x.id === id ? { ...x, post_id: p.post_id } : x)));
+    if (p.state === "created") setNotice({ text: "Post \"Planejado\" criado em Postagens a partir do cartão.", href: `/postagens/${p.post_id}` });
+    else if (p.state === "no_client") setNotice({ text: "Cartão concluído sem cliente: nenhum post foi criado. Defina o cliente e salve o cartão para gerar.", warn: true });
+  }
 
   function indexFromPointer(e: React.DragEvent<HTMLElement>): number {
     const cards = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-card]")].filter((el) => el.dataset.card !== dragId);
@@ -42,10 +50,10 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
     if (t.status === target && position === t.position) return;
     const snapshot = tasks;
     setTasks(tasks.map((x) => (x.id === t.id ? { ...x, status: target, position } : x)));
-    setError(null);
+    setError(null); setNotice(null);
     start(async () => {
       const r = await moveTask(t.id, target, position);
-      if (!r.ok) { setTasks(snapshot); fail(r.error); }
+      if (!r.ok) { setTasks(snapshot); fail(r.error); } else applyPost(t.id, r.post);
     });
   }
 
@@ -54,13 +62,14 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
     const r = await createTask({ title, client_id, status, week_start: week, position });
     if (!r.ok) return fail(r.error);
     setTasks((cur) => [...cur, r.task]);
-    setError(null);
+    setError(null); setNotice(null);
+    applyPost(r.task.id, r.post);
   }
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">Arraste os cartões entre as colunas. Clique em um cartão para editar.</p>
+        <p className="text-xs text-slate-500">Arraste os cartões entre as colunas. Clique em um cartão para editar. Ao concluir, o cartão vira um post "Planejado" em Postagens.</p>
         <button
           className="btn btn-ghost" disabled={busy}
           onClick={() => {
@@ -69,6 +78,12 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
           }}
         >Levar pendentes para a próxima semana →</button>
       </div>
+      {notice && (
+        <div role="status" className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm font-medium ${notice.warn ? "border-yellow-300 bg-yellow-50 text-yellow-800" : "border-green-200 bg-green-50 text-green-800"}`}>
+          <span>{notice.text}{notice.href && <> <Link href={notice.href} className="underline">Abrir post</Link></>}</span>
+          <button className="px-1" aria-label="Fechar aviso" onClick={() => setNotice(null)}>×</button>
+        </div>
+      )}
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">{error}</div>}
 
       <div className="flex items-start gap-3 overflow-x-auto pb-3">
@@ -106,6 +121,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                           {t.client_id && <span className="badge bg-slate-100 text-slate-700">{clientName.get(t.client_id) ?? "Cliente"}</span>}
                           {t.due_date && <span className={`badge ${late ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-700"}`}>⏰ {fmtDiaMes(t.due_date)}</span>}
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
+                          {t.post_id && <Link href={`/postagens/${t.post_id}`} onClick={(e) => e.stopPropagation()} className="badge bg-blue-100 text-blue-800 hover:underline" draggable={false}>📌 Post planejado</Link>}
                         </div>
                       </article>
                     </div>
@@ -136,6 +152,8 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
           const r = await updateTask(t.id, { ...v, position });
           if (!r.ok) return r.error;
           setTasks((cur) => cur.map((x) => (x.id === t.id ? { ...x, ...v, ...(position != null ? { position } : {}) } : x)));
+          setNotice(null);
+          applyPost(t.id, r.post);
           return null;
         }}
         onDelete={async (t) => {

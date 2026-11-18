@@ -15,7 +15,7 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
   const [{ data: clients }, tasksRes] = await Promise.all([
     sb.from("clients").select("id,name").eq("active", true).order("sort"),
     (() => {
-      let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position").eq("week_start", week).order("position");
+      let q = sb.from("tasks").select("id,client_id,title,notes,status,due_date,week_start,position,post_id").eq("week_start", week).order("position");
       if (clientFilter) q = q.eq("client_id", clientFilter);
       return q;
     })(),
