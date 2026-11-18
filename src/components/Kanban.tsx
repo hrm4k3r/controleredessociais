@@ -14,8 +14,9 @@ type ClientOpt = { id: string; name: string };
 const hue = (s: string) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 360, 7);
 const byPos = (a: Task, b: Task) => a.position - b.position;
 
-export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId, names }: {
+export default function Kanban({ week, initial, clients, nextWeekHref, defaultClientId, names, formats, themes, accountsByClient }: {
   week: string; initial: Task[]; clients: ClientOpt[]; nextWeekHref: string; defaultClientId?: string; names: Record<string, string>;
+  formats: string[]; themes: string[]; accountsByClient: Record<string, string[]>;
 }) {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initial);
@@ -58,9 +59,9 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
     });
   }
 
-  async function add(status: TaskStatus, title: string, client_id: string | null) {
+  async function add(status: TaskStatus, title: string, client_id: string | null, format: string | null, theme: string | null) {
     const position = positionAt(col(status).map((x) => x.position), col(status).length);
-    const r = await createTask({ title, client_id, status, week_start: week, position });
+    const r = await createTask({ title, client_id, status, week_start: week, position, format, theme });
     if (!r.ok) return fail(r.error);
     setTasks((cur) => [...cur, r.task]);
     setError(null); setNotice(null);
@@ -121,6 +122,9 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                           {t.client_id && <span className="badge bg-slate-100 text-slate-700">{clientName.get(t.client_id) ?? "Cliente"}</span>}
                           {t.due_date && <span className={`badge ${late ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-700"}`}>⏰ {fmtDiaMes(t.due_date)}</span>}
+                          {t.format && <span className="badge bg-slate-100 text-slate-700">{t.format}</span>}
+                          {t.theme && <span className="badge bg-slate-100 text-slate-700">{t.theme}</span>}
+                          {t.networks?.length > 0 && <span className="badge bg-slate-100 text-slate-700" title="Redes">{t.networks.join(", ")}</span>}
                           {t.notes && <span title="Tem anotações" aria-label="Tem anotações">📝</span>}
                           {t.post_id && <Link href={`/postagens/${t.post_id}`} onClick={(e) => e.stopPropagation()} className="badge bg-blue-100 text-blue-800 hover:underline" draggable={false}>📌 Post planejado</Link>}
                         </div>
@@ -139,9 +143,9 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
 
               {adding === c.id ? (
                 <AddCard
-                  clients={clients} defaultClientId={defaultClientId}
+                  clients={clients} defaultClientId={defaultClientId} formats={formats} themes={themes}
                   onCancel={() => setAdding(null)}
-                  onAdd={async (title, cid) => { await add(c.id, title, cid); }}
+                  onAdd={async (title, cid, fmt, th) => { await add(c.id, title, cid, fmt, th); }}
                 />
               ) : (
                 <button className="mt-2 w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-600 hover:bg-surface" onClick={() => setAdding(c.id)}>+ Adicionar cartão</button>
@@ -152,7 +156,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
       </div>
 
       <EditDialog
-        task={editing} clients={clients} names={names} onClose={() => setEditing(null)}
+        task={editing} clients={clients} names={names} formats={formats} themes={themes} accountsByClient={accountsByClient} onClose={() => setEditing(null)}
         onSave={async (t, v) => {
           const moved = v.status !== t.status;
           const position = moved ? positionAt(col(v.status).filter((x) => x.id !== t.id).map((x) => x.position), col(v.status).filter((x) => x.id !== t.id).length) : undefined;
@@ -174,16 +178,19 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
   );
 }
 
-function AddCard({ clients, defaultClientId, onAdd, onCancel }: {
-  clients: ClientOpt[]; defaultClientId?: string; onAdd: (title: string, clientId: string | null) => Promise<void>; onCancel: () => void;
+function AddCard({ clients, defaultClientId, formats, themes, onAdd, onCancel }: {
+  clients: ClientOpt[]; defaultClientId?: string; formats: string[]; themes: string[];
+  onAdd: (title: string, clientId: string | null, format: string | null, theme: string | null) => Promise<void>; onCancel: () => void;
 }) {
+  const [format, setFormat] = useState("");
+  const [theme, setTheme] = useState("");
   const [title, setTitle] = useState("");
   const [cid, setCid] = useState(defaultClientId ?? "");
   const [pending, setPending] = useState(false);
   async function submit() {
     if (!title.trim() || pending) return;
     setPending(true);
-    await onAdd(title, cid || null);
+    await onAdd(title, cid || null, format || null, theme || null);
     setPending(false);
     setTitle("");
   }
@@ -197,6 +204,10 @@ function AddCard({ clients, defaultClientId, onAdd, onCancel }: {
         <option value="">Sem cliente</option>
         {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
+      <div className="grid grid-cols-2 gap-2">
+        <select value={format} onChange={(e) => setFormat(e.target.value)} className="input" aria-label="Formato"><option value="">Formato</option>{formats.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+        <select value={theme} onChange={(e) => setTheme(e.target.value)} className="input" aria-label="Tema"><option value="">Tema</option>{themes.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+      </div>
       <div className="flex items-center gap-2">
         <button className="btn btn-accent" disabled={pending || !title.trim()} onClick={() => void submit()}>{pending ? "Adicionando…" : "Adicionar"}</button>
         <button className="px-2 text-sm text-slate-600 hover:underline" onClick={onCancel}>Fechar</button>
@@ -205,19 +216,21 @@ function AddCard({ clients, defaultClientId, onAdd, onCancel }: {
   );
 }
 
-type Values = { title: string; client_id: string | null; status: TaskStatus; due_date: string | null; notes: string | null };
+type Values = { title: string; client_id: string | null; status: TaskStatus; due_date: string | null; notes: string | null; format: string | null; theme: string | null; networks: string[] };
 
-function EditDialog({ task, clients, names, onClose, onSave, onDelete }: {
-  task: Task | null; clients: ClientOpt[]; names: Record<string, string>; onClose: () => void;
+function EditDialog({ task, clients, names, formats, themes, accountsByClient, onClose, onSave, onDelete }: {
+  task: Task | null; clients: ClientOpt[]; names: Record<string, string>; formats: string[]; themes: string[]; accountsByClient: Record<string, string[]>; onClose: () => void;
   onSave: (t: Task, v: Values) => Promise<string | null>; onDelete: (t: Task) => Promise<string | null>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [cid, setCid] = useState("");
+  const [nets, setNets] = useState<string[]>([]);
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (task && !d.open) { setErr(null); d.showModal(); }
+    if (task && !d.open) { setErr(null); setCid(task.client_id ?? ""); setNets(task.networks ?? []); d.showModal(); }
     if (!task && d.open) d.close();
   }, [task]);
 
@@ -238,6 +251,7 @@ function EditDialog({ task, clients, names, onClose, onSave, onDelete }: {
               title: String(f.get("title") ?? ""), client_id: String(f.get("client_id") ?? "") || null,
               status: String(f.get("status")) as TaskStatus, due_date: String(f.get("due_date") ?? "") || null,
               notes: String(f.get("notes") ?? "") || null,
+              format: String(f.get("format") ?? "") || null, theme: String(f.get("theme") ?? "") || null, networks: nets,
             });
             setPending(false);
             if (msg) setErr(msg); else ref.current?.close();
@@ -252,11 +266,32 @@ function EditDialog({ task, clients, names, onClose, onSave, onDelete }: {
           <div><label className="label">Título</label><input name="title" required defaultValue={task.title} className="input" /></div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><label className="label">Cliente</label>
-              <select name="client_id" defaultValue={task.client_id ?? ""} className="input"><option value="">Sem cliente</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              <select name="client_id" value={cid} onChange={(e) => { setCid(e.target.value); setNets([]); }} className="input"><option value="">Sem cliente</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div><label className="label">Coluna</label>
               <select name="status" defaultValue={task.status} className="input">{TASK_COLUMNS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
           </div>
           <div className="max-w-48"><label className="label">Prazo</label><DateInput name="due_date" defaultValue={task.due_date} /></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><label className="label">Formato</label>
+              <select name="format" defaultValue={task.format ?? ""} className="input"><option value="">—</option>{formats.map((f) => <option key={f} value={f}>{f}</option>)}</select></div>
+            <div><label className="label">Tema</label>
+              <select name="theme" defaultValue={task.theme ?? ""} className="input"><option value="">—</option>{themes.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
+          </div>
+          <div>
+            <div className="label">Redes</div>
+            {(accountsByClient[cid] ?? []).length === 0 ? (
+              <p className="text-xs text-slate-500">{cid ? "Este cliente não tem redes cadastradas (veja Cadastros)." : "Escolha o cliente para ver as redes."}</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {(accountsByClient[cid] ?? []).map((n) => (
+                  <label key={n} className="flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-sm">
+                    <input type="checkbox" checked={nets.includes(n)} onChange={() => setNets((s) => (s.includes(n) ? s.filter((x) => x !== n) : [...s, n]))} className="h-4 w-4" /> {n}
+                  </label>
+                ))}
+              </div>
+            )}
+            <p className="mt-1 text-xs text-slate-500">Ao concluir, o post nasce com estas redes. Cliente com uma rede só usa ela automaticamente.</p>
+          </div>
           <div><label className="label">Anotações</label><textarea name="notes" rows={4} defaultValue={task.notes ?? ""} className="input" placeholder="Briefing, referências, links…" /></div>
           <div className="flex items-center justify-between gap-2 pt-1">
             <button

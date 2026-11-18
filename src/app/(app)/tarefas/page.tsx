@@ -5,6 +5,7 @@ import { WeekBar } from "@/components/ui";
 import { socialClientFilter } from "@/lib/social-clients";
 import Kanban from "@/components/Kanban";
 import { loadMemberNames } from "@/lib/members";
+import { loadLists } from "@/lib/data";
 import type { Task } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,10 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
     })(),
   ]);
   const names = await loadMemberNames(sb);
+  const lists = await loadLists(sb);
+  const { data: accs } = await sb.from("accounts").select("client_id,network");
+  const accountsByClient: Record<string, string[]> = {};
+  for (const a of accs ?? []) (accountsByClient[a.client_id as string] ??= []).push(a.network as string);
   const nextWeek = new URLSearchParams({ semana: addDays(week, 7), ...(clientFilter ? { cliente: clientFilter } : {}) });
 
   return (
@@ -47,7 +52,7 @@ export default async function Tarefas({ searchParams }: { searchParams: Promise<
         </div>
       ) : (
         <Kanban
-          key={`${week}|${clientFilter}`} week={week} names={names} initial={(tasksRes.data ?? []) as Task[]}
+          key={`${week}|${clientFilter}`} week={week} names={names} formats={lists.formats} themes={lists.themes} accountsByClient={accountsByClient} initial={(tasksRes.data ?? []) as Task[]}
           clients={(clients ?? []).map((c) => ({ id: c.id as string, name: c.name as string }))}
           nextWeekHref={`/tarefas?${nextWeek.toString()}`} defaultClientId={clientFilter || undefined}
         />

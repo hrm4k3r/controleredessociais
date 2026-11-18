@@ -11,6 +11,7 @@ export type Task = {
   id: string; client_id: string | null; title: string; notes: string | null;
   status: TaskStatus; due_date: string | null; week_start: string; position: number; post_id: string | null;
   created_by: string | null; completed_by: string | null; created_at: string;
+  format: string | null; theme: string | null; networks: string[];
 };
 
 /** Resultado da geração automática do post "Planejado" ao concluir um cartão. */
