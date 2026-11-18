@@ -90,3 +90,21 @@ export function addMonthsKeepDay(iso: string, n: number): string {
 export function diffDays(a: string, b: string): number {
   return Math.round((toUTC(b).getTime() - toUTC(a).getTime()) / 86400000);
 }
+
+/** Data e hora (de parede, America/Sao_Paulo) de um instante ISO. */
+export function spParts(iso: string): { date: string; time: string } {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+}
+
+/** Data + hora de São Paulo (UTC−03:00, sem horário de verão desde 2019) → instante ISO; null se inválido. */
+export function spToISO(date: string, time: string): string | null {
+  if (!isValidISO(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return null;
+  return `${date}T${time}:00-03:00`;
+}
+
+/** "17/11/2026 às 18:30" */
+export function fmtColeta(iso: string): string {
+  const { date, time } = spParts(iso);
+  return `${fmtData(date)} às ${time}`;
+}

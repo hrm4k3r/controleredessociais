@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { fmtPeriodo } from "./dates";
+import { fmtColeta, fmtPeriodo } from "./dates";
 import { ensureToken, loadReport, publicLink } from "./report-data";
 import { renderReportPng } from "./report-image";
 
@@ -15,8 +15,9 @@ export function emailMode(): { mode: EmailMode; reason?: string } {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export function buildEmail(clientName: string, week: string, link: string) {
+export function buildEmail(clientName: string, week: string, link: string, collectedAt?: string | null) {
   const periodo = fmtPeriodo(week);
+  const coleta = collectedAt ? fmtColeta(collectedAt) : null;
   const subject = `Relatório semanal de redes sociais — ${clientName} (${periodo})`;
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#eef1f6;font-family:Arial,Helvetica,sans-serif;color:#1b2437">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
@@ -25,12 +26,12 @@ export function buildEmail(clientName: string, week: string, link: string) {
 <div style="color:#fff;font-size:24px;font-weight:bold;margin-top:6px">${esc(clientName)}</div>
 <div style="color:#c9d3ea;font-size:15px;margin-top:4px">Semana de ${esc(periodo)}</div></td></tr>
 <tr><td style="padding:24px 28px;font-size:16px;line-height:1.5">
-<p style="margin:0 0 14px">Olá! Segue o relatório de redes sociais da semana de <b>${esc(periodo)}</b>.</p>
+<p style="margin:0 0 14px">Olá! Segue o relatório de redes sociais da semana de <b>${esc(periodo)}</b>.${coleta ? ` Dados coletados em ${esc(coleta)}.` : ""}</p>
 <p style="margin:0 0 20px">A imagem em formato Stories vai em anexo. Para ver direto no celular, use o botão abaixo:</p>
 <p style="margin:0 0 24px"><a href="${esc(link)}" style="background:#e8590c;color:#fff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:10px;display:inline-block">Ver relatório no celular</a></p>
 <p style="margin:0;color:#64708a;font-size:13px">Qualquer dúvida é só responder este e-mail.</p>
 </td></tr></table></td></tr></table></body></html>`;
-  const text = `Olá! Segue o relatório de redes sociais de ${clientName} — semana de ${periodo}.\nVer no celular: ${link}\nA imagem em formato Stories está em anexo.`;
+  const text = `Olá! Segue o relatório de redes sociais de ${clientName} — semana de ${periodo}.${coleta ? ` Dados coletados em ${coleta}.` : ""}\nVer no celular: ${link}\nA imagem em formato Stories está em anexo.`;
   return { subject, html, text };
 }
 
@@ -42,7 +43,7 @@ export async function sendReport(sb: SupabaseClient, opts: { clientId: string; w
   if (!report) throw new Error("Cliente não encontrado");
   const token = await ensureToken(sb, opts.clientId, opts.week);
   const link = publicLink(token);
-  const { subject, html, text } = buildEmail(report.client.name, opts.week, link);
+  const { subject, html, text } = buildEmail(report.client.name, opts.week, link, report.collectedAt);
   const { mode, reason } = emailMode();
   const png = mode === "live" ? await renderReportPng(report) : null;
   const resend = mode === "live" ? new Resend(process.env.RESEND_API_KEY) : null;

@@ -213,3 +213,15 @@ Koin\t28/09/2027\tR$ 44,78\tPendente\t12/12`;
     expect(r[8].due_date).toBe("2027-09-28");
   });
 });
+
+import { fmtColeta, spParts, spToISO } from "./dates";
+describe("hora da coleta", () => {
+  it("converte entre horário de São Paulo e instante ISO", () => {
+    const iso = spToISO("2026-11-22", "18:30")!;
+    expect(new Date(iso).toISOString()).toBe("2026-11-22T21:30:00.000Z");
+    expect(spParts(iso)).toEqual({ date: "2026-11-22", time: "18:30" });
+    expect(fmtColeta(iso)).toBe("22/11/2026 às 18:30");
+    expect(spToISO("2026-11-22", "25:00")).toBeNull();
+    expect(spToISO("", "10:00")).toBeNull();
+  });
+});

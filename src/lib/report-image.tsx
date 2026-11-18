@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
-import { fmtPeriodo } from "./dates";
+import { fmtColeta, fmtPeriodo } from "./dates";
 import { goalText } from "./calc";
 import type { NetworkRow, ReportData, ResultRow } from "./aggregate";
 
@@ -131,7 +131,10 @@ export function ReportImage({ data }: { data: ReportData }) {
   const steps = clip(data.nextSteps.trim(), dense ? 130 : compact ? 150 : 200);
   const pctW = Math.min(100, Math.round((s.pct ?? 0) * 100));
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: REPORT_W, height: REPORT_H, background: C.bg, fontFamily: "Inter", color: C.text }}>
+    <div style={{ display: "flex", flexDirection: "column", position: "relative", width: REPORT_W, height: REPORT_H, background: C.bg, fontFamily: "Inter", color: C.text }}>
+      {data.collectedAt && (
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 4, display: "flex", justifyContent: "center", fontSize: 20, fontWeight: 600, color: C.muted }}>{`Dados coletados em ${fmtColeta(data.collectedAt)}`}</div>
+      )}
       {/* Cabeçalho */}
       <div style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #131a2e 0%, #2b3a5e 100%)", padding: "44px 60px 28px", gap: 4 }}>
         <div style={{ position: "absolute", right: -70, top: -90, width: 320, height: 320, borderRadius: 160, background: C.accent, opacity: 0.9 }} />

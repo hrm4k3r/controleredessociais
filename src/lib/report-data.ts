@@ -7,7 +7,10 @@ import type { WeeklyNote } from "./types";
 export async function loadReport(sb: SupabaseClient, clientId: string, week: string): Promise<ReportData | null> {
   const ds = await loadDataset(sb, clientId);
   if (!ds.clients.some((c) => c.id === clientId)) return null;
-  const { data } = await sb.from("weekly_notes").select("client_id,week_start,comment,next_steps,public_token").eq("client_id", clientId).eq("week_start", week).maybeSingle();
+  let res = await sb.from("weekly_notes").select("client_id,week_start,comment,next_steps,public_token,collected_at").eq("client_id", clientId).eq("week_start", week).maybeSingle();
+  // Antes da migração da hora da coleta a coluna não existe: relê sem ela.
+  if (res.error) res = (await sb.from("weekly_notes").select("client_id,week_start,comment,next_steps,public_token").eq("client_id", clientId).eq("week_start", week).maybeSingle()) as typeof res;
+  const data = res.data;
   return buildReport(ds, clientId, week, (data as WeeklyNote | null) ?? undefined);
 }
 

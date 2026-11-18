@@ -1,11 +1,12 @@
 import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { loadDataset } from "@/lib/data";
-import { addDays, fmtData, weekEnd } from "@/lib/dates";
+import { addDays, fmtData, spParts, weekEnd } from "@/lib/dates";
 import { ok as okParam, weekParam } from "@/lib/params";
 import { networkRows } from "@/lib/aggregate";
 import { goalPct } from "@/lib/calc";
 import { Flash, WeekBar, delta, deltaColor, deltaInt, pct } from "@/components/ui";
+import CollectedAt from "@/components/CollectedAt";
 import { saveMetrics } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,10 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
   const sb = await createClient();
   const ds = await loadDataset(sb);
   const prev = addDays(week, -7);
+  // Hora da coleta por cliente (consulta tolerante: antes da migração a coluna não existe).
+  const { data: notes } = await sb.from("weekly_notes").select("client_id,collected_at").eq("week_start", week);
+  const collected = new Map((notes ?? []).filter((n) => n.collected_at).map((n) => [n.client_id as string, spParts(n.collected_at as string)]));
+  const nowParts = spParts(new Date().toISOString());
 
   return (
     <div className="space-y-5">
@@ -24,6 +29,7 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
         <p className="text-sm text-slate-600">Preencha no domingo (Insights dos últimos 7 dias). Semana de {fmtData(week)} a {fmtData(weekEnd(week))}.</p>
       </div>
       <Flash ok={okParam(sp)} />
+      {sp.aviso === "coleta" && <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-800">Métricas salvas, mas a hora da coleta não pôde ser gravada. Rode a migração <code>20261118000011_hora_coleta.sql</code> no Supabase.</div>}
       <WeekBar path="/metricas" week={week} />
       <form action={saveMetrics} className="space-y-5">
         <input type="hidden" name="week" value={week} />
@@ -34,6 +40,9 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
               <div className="flex items-center justify-between border-b border-line px-4 py-2">
                 <h2 className={`font-bold ${c.is_internal ? "text-accent" : "text-navy"}`}>{c.name}</h2>
                 <span className="text-xs text-slate-500">Meta: {c.weekly_goal} posts/sem.</span>
+              </div>
+              <div className="border-b border-line bg-slate-50 px-4 py-2">
+                <CollectedAt prefix={`coll|${c.id}`} defaultDate={(collected.get(c.id) ?? nowParts).date} defaultTime={(collected.get(c.id) ?? nowParts).time} />
               </div>
               <table className="w-full min-w-[980px]">
                 <thead>

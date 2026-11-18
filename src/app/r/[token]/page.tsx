@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { reportByToken } from "@/lib/public-report";
-import { fmtPeriodo } from "@/lib/dates";
+import { fmtColeta, fmtPeriodo } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Relatório semanal", robots: { index: false, follow: false } };
@@ -17,6 +17,7 @@ export default async function RelatorioPublico({ params }: { params: Promise<{ t
         <div className="text-center">
           <p className="text-sm text-slate-300">{report.client.name}</p>
           <h1 className="text-lg font-bold">Relatório da semana {fmtPeriodo(report.week)}</h1>
+          {report.collectedAt && <p className="mt-1 text-xs text-slate-300">Dados coletados em {fmtColeta(report.collectedAt)}</p>}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`/r/${token}/image`} alt={`Relatório semanal de ${report.client.name}`} width={1080} height={1920} className="h-auto w-full rounded-2xl shadow-2xl" />

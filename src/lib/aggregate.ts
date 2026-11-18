@@ -153,9 +153,11 @@ export type ReportData = {
   adapt: ResultRow | null;
   comment: string;
   nextSteps: string;
+  /** Instante (ISO) em que os dados da semana foram coletados; null se não informado. */
+  collectedAt: string | null;
 };
 
-export function buildReport(ds: Dataset, clientId: string, week: string, note?: { comment?: string | null; next_steps?: string | null }): ReportData {
+export function buildReport(ds: Dataset, clientId: string, week: string, note?: { comment?: string | null; next_steps?: string | null; collected_at?: string | null }): ReportData {
   const client = ds.clients.find((c) => c.id === clientId)!;
   const rows = resultRows(ds, clientId, week).filter((r) => r.rate != null && r.markedNetwork);
   const sorted = sortByRate(rows, (r) => r.rate);
@@ -170,6 +172,7 @@ export function buildReport(ds: Dataset, clientId: string, week: string, note?: 
     adapt: worst,
     comment: note?.comment ?? "",
     nextSteps: note?.next_steps ?? "",
+    collectedAt: note?.collected_at ?? null,
   };
 }
 

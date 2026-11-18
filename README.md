@@ -73,6 +73,7 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
 
 - **Todo dia:** *Postagens → Novo post* (data, cliente, status, formato, tema, redes em que saiu). Só “Postado” conta para a meta;
   um post em várias redes conta 1.
+- **Hora da coleta:** em *Métricas*, cada cliente tem "Dados coletados em [data] às [hora]" (vem preenchido com o momento atual; o botão *Agora* atualiza). Aparece no PNG, na página pública e no e-mail do relatório. Exige a migração `20261118000011_hora_coleta.sql`.
 - **Domingo:** *Métricas* (seguidores, visualizações, alcance, interações, cliques por conta) e *Resultados* (números de cada post por rede).
 - **Segunda:** *Painel* (meta × feito, variação) e *Relatório* (comentário, próximos passos, PNG, link e envio).
 - **Tarefas:** quadro Kanban semanal (A fazer / Em andamento / Em revisão / Concluído) para organizar as postagens a criar; arraste os cartões, filtre por cliente e leve os pendentes para a próxima semana. Ao concluir, o cartão vira um post "Planejado" (se tiver cliente; uma vez só). Exige as migrações `20261118000002_tarefas.sql`, `20261118000003_tarefas_post.sql` e `20261118000009_tarefas_post_campos.sql`. O cartão guarda formato, tema e redes, e o post já nasce completo.
