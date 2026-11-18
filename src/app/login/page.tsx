@@ -1,3 +1,4 @@
+import Logo from "@/components/Logo";
 import SubmitButton from "@/components/SubmitButton";
 import { signIn } from "./actions";
 
@@ -6,7 +7,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#131a2e] to-[#2b3a5e] p-6">
       <div className="w-full max-w-sm">
-        <div className="mb-5 flex items-center gap-3 text-white"><span className="inline-block h-9 w-9 rounded-full bg-accent" /><span className="text-xl font-extrabold">Rixxer Hub</span></div>
+        <div className="mb-5 text-white"><Logo size={40} textClass="text-2xl" /></div>
       <form action={signIn} className="card w-full space-y-4 !p-6 shadow-2xl">
         <div>
           <h1 className="page-title">Entrar</h1>

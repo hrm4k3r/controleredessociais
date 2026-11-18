@@ -24,7 +24,7 @@ export default async function CaixaLayout({ children }: { children: React.ReactN
   if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
   return (
     <div className="min-h-screen">
-      <AppHeader title="Financeiro" dot="bg-emerald-400" nav={nav} canSwitch={access.modules.length > 1} />
+      <AppHeader title="Financeiro" nav={nav} canSwitch={access.modules.length > 1} />
       <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
     </div>
   );
