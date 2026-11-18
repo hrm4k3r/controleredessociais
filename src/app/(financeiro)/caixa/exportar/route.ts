@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
 import { toCsv } from "@/lib/export";
 import { firstOfMonth, isValidISO, monthEnd, todayISO } from "@/lib/dates";
-import { ENTRY_COLS, STATUS_LABEL, statusOf, type Entry } from "@/lib/caixa";
+import { loadFinance } from "@/lib/finance-data";
+import { loadAccounts } from "@/lib/caixa-server";
+import { CONTRACT_CATEGORY, CONTRACT_CATEGORY_LABEL, ENTRY_COLS, STATUS_LABEL, contractAccountId, contractEntries, statusOf, type Entry } from "@/lib/caixa";
 
 export async function GET(req: NextRequest) {
   const sb = await createClient();
@@ -13,13 +15,15 @@ export async function GET(req: NextRequest) {
   const m = req.nextUrl.searchParams.get("mes") ?? "";
   const today = todayISO();
   const month = isValidISO(m) ? firstOfMonth(m) : firstOfMonth(today);
-  const [en, ac, ca, cl] = await Promise.all([
+  const [en, accounts, ca, cl, fin] = await Promise.all([
     sb.from("fin_entries").select(ENTRY_COLS).gte("due_date", month).lte("due_date", monthEnd(month)).order("due_date"),
-    sb.from("fin_accounts").select("id,name"), sb.from("fin_categories").select("id,name"), sb.from("clients").select("id,name"),
+    loadAccounts(sb), sb.from("fin_categories").select("id,name"), sb.from("clients").select("id,name"), loadFinance(sb),
   ]);
   const name = (rows: { id: string; name: string }[] | null) => new Map((rows ?? []).map((r) => [r.id, r.name]));
-  const [an, cn, kn] = [name(ac.data), name(ca.data), name(cl.data)];
-  const entries = (en.data ?? []) as Entry[];
+  const [an, cn, kn] = [name(accounts), name(ca.data), name(cl.data)];
+  cn.set(CONTRACT_CATEGORY, CONTRACT_CATEGORY_LABEL);
+  const contracts = contractEntries(fin.clients, fin.payments, today, contractAccountId(accounts)).filter((e) => e.due_date >= month && e.due_date <= monthEnd(month));
+  const entries = [...((en.data ?? []) as Entry[]), ...contracts].sort((a, b) => a.due_date.localeCompare(b.due_date));
   const csv = toCsv({
     name: "Lançamentos",
     headers: ["Vencimento", "Tipo", "Descrição", "Categoria", "Conta", "Cliente", "Valor (R$)", "Situação", "Data do pagamento", "Observações"],

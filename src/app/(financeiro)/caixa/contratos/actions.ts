@@ -16,15 +16,15 @@ export async function saveFinanceCadastro(fd: FormData) {
   }));
   const { error } = await sb.from("client_finance").upsert(rows, { onConflict: "client_id" });
   if (error) throw new Error(error.message);
-  revalidatePath("/financeiro");
-  redirect(`/financeiro?mes=${String(fd.get("mes"))}&ok=1`);
+  revalidatePath("/caixa", "layout");
+  redirect(`/caixa/contratos?mes=${String(fd.get("mes"))}&ok=1`);
 }
 
 export async function savePayments(fd: FormData) {
   const sb = await createClient();
   await requireFinance(sb);
   const mes = String(fd.get("mes"));
-  if (!isValidISO(mes)) redirect("/financeiro");
+  if (!isValidISO(mes)) redirect("/caixa/contratos");
   const ids = fd.getAll("id").map(String);
   const { data: fin } = await sb.from("client_finance").select("client_id,monthly_amount");
   const amountOf = new Map((fin ?? []).map((f) => [f.client_id as string, Number(f.monthly_amount)]));
@@ -47,6 +47,6 @@ export async function savePayments(fd: FormData) {
     const { error } = await sb.from("payments").upsert(upserts, { onConflict: "client_id,ref_month" });
     if (error) throw new Error(error.message);
   }
-  revalidatePath("/financeiro");
-  redirect(`/financeiro?mes=${mes}&ok=1`);
+  revalidatePath("/caixa", "layout");
+  redirect(`/caixa/contratos?mes=${mes}&ok=1`);
 }

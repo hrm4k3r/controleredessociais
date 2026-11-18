@@ -1,12 +1,16 @@
+import { FINANCE_START_MONTH } from "./constants";
 import { addMonths, firstOfMonth, monthEnd } from "./dates";
+import { dueDate } from "./finance";
 
 export type EntryKind = "entrada" | "saida";
 export type Entry = {
   id: string; kind: EntryKind; description: string; amount: number; due_date: string; paid_date: string | null;
   account_id: string | null; category_id: string | null; client_id: string | null; notes: string | null;
   group_id: string | null; installment: number | null; installments: number | null; created_by: string | null;
+  /** "contrato" = mensalidade vinda dos Contratos (somente leitura no caixa). */
+  source?: "contrato";
 };
-export type Account = { id: string; name: string; kind: string; opening_balance: number; active: boolean; sort: number };
+export type Account = { id: string; name: string; kind: string; opening_balance: number; active: boolean; sort: number; receives_contracts?: boolean };
 export type Category = { id: string; kind: EntryKind; name: string; active: boolean };
 
 export const ENTRY_COLS = "id,kind,description,amount,due_date,paid_date,account_id,category_id,client_id,notes,group_id,installment,installments,created_by";
@@ -102,4 +106,43 @@ export function splitAmount(total: number, n: number): number[] {
   const parts = Array.from({ length: n }, () => base);
   parts[n - 1] = round2(total - base * (n - 1));
   return parts;
+}
+
+/** Categoria virtual das mensalidades de contratos. */
+export const CONTRACT_CATEGORY = "contratos";
+export const CONTRACT_CATEGORY_LABEL = "Contratos (mensalidades)";
+
+/** Conta que recebe os contratos: a marcada; senão a primeira ativa. */
+export function contractAccountId(accounts: Account[]): string | null {
+  return (accounts.find((a) => a.receives_contracts && a.active) ?? accounts.find((a) => a.active))?.id ?? null;
+}
+
+type ContractClient = { id: string; name: string; monthly_amount: number; due_day: number };
+type ContractPayment = { client_id: string; ref_month: string; amount_due: number | null; paid_date: string | null; paid_amount: number | null; notes: string | null };
+
+/**
+ * Mensalidades dos contratos como entradas do caixa: do início do controle até 3 meses à frente.
+ * Pagamento parcial vira uma entrada recebida (valor pago) e outra pendente (resto).
+ */
+export function contractEntries(clients: ContractClient[], payments: ContractPayment[], today: string, accountId: string | null): Entry[] {
+  const out: Entry[] = [];
+  const last = addMonths(firstOfMonth(today), 3);
+  for (let month = FINANCE_START_MONTH; month <= last; month = addMonths(month, 1)) {
+    for (const c of clients) {
+      const pay = payments.find((p) => p.client_id === c.id && p.ref_month === month);
+      const amountDue = pay?.amount_due ?? c.monthly_amount;
+      if (!(amountDue > 0)) continue;
+      const base = { kind: "entrada" as const, due_date: dueDate(month, c.due_day), account_id: accountId, category_id: CONTRACT_CATEGORY, client_id: c.id, notes: pay?.notes ?? null, group_id: null, installment: null, installments: null, created_by: null, source: "contrato" as const };
+      const id = `contrato:${c.id}:${month}`;
+      if (pay?.paid_date) {
+        const paid = pay.paid_amount ?? amountDue;
+        out.push({ ...base, id, description: `Mensalidade — ${c.name}`, amount: round2(paid), paid_date: pay.paid_date });
+        const rest = round2(amountDue - paid);
+        if (rest > 0.004) out.push({ ...base, id: `${id}:resto`, description: `Mensalidade (saldo) — ${c.name}`, amount: rest, paid_date: null });
+      } else {
+        out.push({ ...base, id, description: `Mensalidade — ${c.name}`, amount: round2(amountDue), paid_date: null });
+      }
+    }
+  }
+  return out;
 }

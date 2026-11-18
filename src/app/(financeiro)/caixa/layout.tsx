@@ -8,6 +8,7 @@ import AppHeader from "@/components/AppHeader";
 const NAV: [string, string][] = [
   ["/caixa", "Painel"],
   ["/caixa/lancamentos", "Lançamentos"],
+  ["/caixa/contratos", "Contratos"],
   ["/caixa/cadastros", "Contas e categorias"],
   ["/clientes", "Clientes"],
 ];

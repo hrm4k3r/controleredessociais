@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ErrorBox, Flash } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { one, ok as okParam } from "@/lib/params";
-import { ACCOUNT_KINDS, type Account, type Category } from "@/lib/caixa";
+import { loadAccounts } from "@/lib/caixa-server";
+import { ACCOUNT_KINDS, contractAccountId, type Category } from "@/lib/caixa";
 import { addAccount, addCategory, saveAccounts, saveCategories } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +12,11 @@ const ERR: Record<string, string> = { nome: "Informe o nome.", existe: "Já exis
 export default async function Cadastros({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const sb = await createClient();
-  const [ac, ca] = await Promise.all([
-    sb.from("fin_accounts").select("id,name,kind,opening_balance,active,sort").order("sort"),
+  const [accounts, ca] = await Promise.all([
+    loadAccounts(sb),
     sb.from("fin_categories").select("id,kind,name,active").order("name"),
   ]);
-  const accounts = ((ac.data ?? []) as Account[]).map((a) => ({ ...a, opening_balance: Number(a.opening_balance) }));
+  const contractAcc = contractAccountId(accounts);
   const categories = (ca.data ?? []) as Category[];
   const erro = one(sp.erro);
   const Kind = ({ name, value }: { name: string; value: string }) => <select name={name} defaultValue={value} className="input">{ACCOUNT_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}</select>;
@@ -31,12 +32,13 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
         <p className="text-sm text-slate-600">O saldo inicial é o valor que a conta tinha antes do primeiro lançamento. O saldo atual soma o que foi recebido e subtrai o que foi pago.</p>
         <form action={saveAccounts} className="space-y-2">
           {accounts.map((a) => (
-            <div key={a.id} className="grid items-end gap-3 sm:grid-cols-[1fr_12rem_9rem_auto]">
+            <div key={a.id} className="grid items-end gap-3 sm:grid-cols-[1fr_12rem_9rem_auto_auto]">
               <input type="hidden" name="id" value={a.id} />
               <div><label className="label">Nome</label><input name={`name|${a.id}`} defaultValue={a.name} className="input" /></div>
               <div><label className="label">Tipo</label><Kind name={`kind|${a.id}`} value={a.kind} /></div>
               <div><label className="label">Saldo inicial (R$)</label><input name={`opening|${a.id}`} inputMode="decimal" defaultValue={String(a.opening_balance).replace(".", ",")} className="input" /></div>
               <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" name={`active|${a.id}`} defaultChecked={a.active} className="h-4 w-4" /> Ativa</label>
+              <label className="flex items-center gap-2 pb-2 text-sm" title="As mensalidades dos contratos entram no saldo desta conta"><input type="radio" name="contract_account" value={a.id} defaultChecked={a.id === contractAcc} className="h-4 w-4" /> Recebe os contratos</label>
             </div>
           ))}
           <SubmitButton className="btn">Salvar contas</SubmitButton>

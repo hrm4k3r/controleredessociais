@@ -109,7 +109,7 @@ describe("projetos de software", () => {
   });
 });
 
-import { balances, forecast, pending, realized, splitAmount, statusOf, type Entry } from "./caixa";
+import { balances, contractEntries, forecast, pending, realized, splitAmount, statusOf, type Entry } from "./caixa";
 import { addMonthsKeepDay, monthEnd } from "./dates";
 const E = (p: Partial<Entry>): Entry => ({ id: "x", kind: "entrada", description: "d", amount: 100, due_date: "2026-11-10", paid_date: null, account_id: "a", category_id: null, client_id: null, notes: null, group_id: null, installment: null, installments: null, created_by: null, ...p });
 describe("caixa", () => {
@@ -133,5 +133,19 @@ describe("caixa", () => {
     expect(addMonthsKeepDay("2026-01-31", 1)).toBe("2026-02-28");
     expect(addMonthsKeepDay("2026-11-15", 3)).toBe("2027-02-15");
     expect(monthEnd("2026-02-10")).toBe("2026-02-28");
+  });
+});
+
+describe("contratos no caixa", () => {
+  it("gera mensalidades, parcial e meses futuros", () => {
+    const cl = [{ id: "c1", name: "Cliente", monthly_amount: 500, due_day: 10 }];
+    const pay = [{ client_id: "c1", ref_month: "2026-11-01", amount_due: null, paid_date: "2026-11-08", paid_amount: 300, notes: null }];
+    const es = contractEntries(cl, pay, "2026-11-18", "acc");
+    const nov = es.filter((e) => e.due_date.startsWith("2026-11"));
+    expect(nov.map((e) => [e.amount, e.paid_date])).toEqual([[300, "2026-11-08"], [200, null]]);
+    expect(es.some((e) => e.due_date === "2027-02-10")).toBe(true);
+    expect(es.every((e) => e.source === "contrato" && e.account_id === "acc")).toBe(true);
+    expect(realized(es, "2026-11-01").entradas).toBe(300);
+    expect(contractEntries([{ ...cl[0], monthly_amount: 0 }], [], "2026-11-18", null)).toEqual([]);
   });
 });

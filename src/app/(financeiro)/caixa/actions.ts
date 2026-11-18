@@ -107,6 +107,11 @@ export async function addAccount(fd: FormData) {
 
 export async function saveAccounts(fd: FormData) {
   const sb = await guard();
+  const contractAcc = textField(fd.get("contract_account"));
+  if (contractAcc) {
+    await sb.from("fin_accounts").update({ receives_contracts: false }).eq("receives_contracts", true);
+    await sb.from("fin_accounts").update({ receives_contracts: true }).eq("id", contractAcc);
+  }
   for (const id of fd.getAll("id").map(String)) {
     const name = textField(fd.get(`name|${id}`));
     if (!name) return fail(CAD, "nome");

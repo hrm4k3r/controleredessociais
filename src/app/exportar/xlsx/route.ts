@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
-import { canSeeFinance } from "@/lib/roles";
 import { buildTables } from "@/lib/export";
 import { todayISO } from "@/lib/dates";
 
@@ -15,7 +14,7 @@ export async function GET() {
   const acc = await getAccess(sb);
   if (!acc?.modules.includes("social")) return new NextResponse("Sem acesso a esta gestão", { status: 403 });
   const wb = new ExcelJS.Workbook();
-  for (const t of Object.values(await buildTables(sb, canSeeFinance(acc.role)))) {
+  for (const t of Object.values(await buildTables(sb, acc.modules.includes("financeiro")))) {
     const ws = wb.addWorksheet(t.name);
     ws.addRow(t.headers).font = { bold: true };
     t.rows.forEach((r) => ws.addRow(r));

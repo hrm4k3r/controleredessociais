@@ -4,8 +4,11 @@ import MonthNav from "@/components/MonthNav";
 import { one } from "@/lib/params";
 import { addMonths, firstOfMonth, fmtDiaMes, fmtMes, isValidISO, todayISO } from "@/lib/dates";
 import { brl } from "@/lib/finance";
+import { loadFinance } from "@/lib/finance-data";
+import { loadAccounts } from "@/lib/caixa-server";
 import {
-  ENTRY_COLS, balances, byCategory, forecast, monthlySeries, pending, realized, statusOf, type Account, type Category, type Entry,
+  CONTRACT_CATEGORY, CONTRACT_CATEGORY_LABEL, ENTRY_COLS, balances, byCategory, contractAccountId, contractEntries, forecast, monthlySeries, pending, realized, statusOf,
+  type Category, type Entry,
 } from "@/lib/caixa";
 
 export const dynamic = "force-dynamic";
@@ -16,15 +19,17 @@ export default async function CaixaPainel({ searchParams }: { searchParams: Prom
   const m = one(sp.mes);
   const month = isValidISO(m) ? firstOfMonth(m) : firstOfMonth(today);
   const sb = await createClient();
-  const [en, ac, ca] = await Promise.all([
+  const [en, accounts, ca, fin] = await Promise.all([
     sb.from("fin_entries").select(ENTRY_COLS).limit(50000),
-    sb.from("fin_accounts").select("id,name,kind,opening_balance,active,sort").order("sort"),
+    loadAccounts(sb),
     sb.from("fin_categories").select("id,kind,name,active"),
+    loadFinance(sb),
   ]);
   if (en.error) return <div className="space-y-5"><h1 className="page-title">Fluxo de caixa</h1><div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">Não foi possível carregar. Rode a migração <code>20261118000007_financeiro_caixa.sql</code> no Supabase.</div></div>;
-  const entries = ((en.data ?? []) as Entry[]).map((e) => ({ ...e, amount: Number(e.amount) }));
-  const accounts = ((ac.data ?? []) as Account[]).map((a) => ({ ...a, opening_balance: Number(a.opening_balance) }));
-  const catName = new Map(((ca.data ?? []) as Category[]).map((c) => [c.id, c.name]));
+  const contracts = contractEntries(fin.clients, fin.payments, today, contractAccountId(accounts));
+  const entries: Entry[] = [...((en.data ?? []) as Entry[]).map((e) => ({ ...e, amount: Number(e.amount) })), ...contracts];
+  const catName = new Map<string | null, string>([...((ca.data ?? []) as Category[]).map((c) => [c.id, c.name] as [string, string]), [CONTRACT_CATEGORY, CONTRACT_CATEGORY_LABEL]]);
+  const cReal = realized(contracts, month), cPrev = forecast(contracts, month), cPend = pending(contracts, "entrada", today);
   const bal = balances(accounts, entries, today);
   const totalBalance = [...bal.entries()].filter(([id]) => accounts.find((a) => a.id === id)?.active).reduce((s, [, v]) => s + v, 0);
   const real = realized(entries, month);
@@ -67,6 +72,15 @@ export default async function CaixaPainel({ searchParams }: { searchParams: Prom
         <Card label={`Saídas em ${fmtMes(month)}`} value={brl(real.saidas)} tone="text-red-600" sub={`Previsto: ${brl(prev.saidas)}`} />
         <Card label="Resultado do mês" value={brl(real.resultado)} tone={real.resultado < 0 ? "text-red-600" : "text-green-700"} sub={`Previsto: ${brl(prev.resultado)}`} />
       </div>
+
+      <Link href={`/caixa/contratos?mes=${month}`} className="card block hover:border-accent">
+        <div className="label">Contratos (mensalidades) — {fmtMes(month)}</div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <span className="text-2xl font-extrabold tabular-nums text-green-700">{brl(cReal.entradas)}</span>
+          <span className="text-sm text-slate-600">recebido de {brl(cPrev.entradas)} previstos · {brl(cPend.overdue)} em atraso (todos os meses)</span>
+        </div>
+        <div className="mt-1 text-xs text-slate-500">As mensalidades entram nas entradas, no saldo e nos gráficos abaixo. Clique para dar baixa nos contratos.</div>
+      </Link>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/caixa/lancamentos?tipo=entrada&status=atrasado" className="card block hover:border-accent"><div className="label">A receber (total)</div><div className="text-2xl font-extrabold tabular-nums text-navy">{brl(receber.total)}</div><div className={`mt-1 text-xs ${receber.overdue ? "font-semibold text-red-700" : "text-slate-500"}`}>{receber.overdue ? `${brl(receber.overdue)} em atraso` : "Nada em atraso"}</div></Link>

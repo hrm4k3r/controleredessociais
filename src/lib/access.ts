@@ -37,7 +37,7 @@ export async function getAccess(sb: SupabaseClient): Promise<Access | null> {
 export async function requireFinance(sb: SupabaseClient): Promise<Access> {
   const a = await getAccess(sb);
   if (!a) redirect("/login");
-  if (!a.modules.includes("social") || !canSeeFinance(a.role)) redirect("/");
+  if (!a.modules.includes("financeiro") || !canSeeFinance(a.role)) redirect("/modulos");
   return a;
 }
 

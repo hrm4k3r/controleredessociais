@@ -77,7 +77,7 @@ e métricas lançadas, sem repetir quem já recebeu. Para ligar: defina as duas 
 - **Segunda:** *Painel* (meta × feito, variação) e *Relatório* (comentário, próximos passos, PNG, link e envio).
 - **Tarefas:** quadro Kanban semanal (A fazer / Em andamento / Em revisão / Concluído) para organizar as postagens a criar; arraste os cartões, filtre por cliente e leve os pendentes para a próxima semana. Ao concluir, o cartão vira um post "Planejado" (se tiver cliente; uma vez só). Exige as migrações `20261118000002_tarefas.sql` e `20261118000003_tarefas_post.sql`.
 - **Autoria:** cartões e posts mostram quem criou (e quem concluiu/editou por último). Gravado por triggers do banco (migração `20261118000004_autoria.sql`); o nome vem de *Usuários*.
-- **Financeiro:** valor/vencimento por cliente e pagamentos do mês. **Cadastros:** metas, redes, e-mails e listas. **Backup:** XLSX/CSV em *Cadastros*.
+- **Financeiro (gestão própria, `/caixa`):** contratos (valor/vencimento por cliente e pagamentos do mês) e fluxo de caixa. **Cadastros:** metas, redes, e-mails e listas. **Backup:** XLSX/CSV em *Cadastros*.
 
 ## Regras de cálculo (testadas em `src/lib/lib.test.ts`)
 
@@ -107,8 +107,8 @@ o que pertence a uma organização da qual é membro (`organization_members`, pa
 
 O sistema tem três gestões no mesmo pacote: **Redes Sociais** (`social`, rotas na raiz), **Projetos de Software**
 (`dev`, rotas em `/dev`: Painel, Projetos com quadro Kanban, marcos de entrega, Minhas tarefas e Horas) e **Financeiro**
-(`financeiro`, rotas em `/caixa`: fluxo de caixa com entradas e saídas, contas a pagar/receber, contas, categorias e CSV;
-só proprietário/administrador).
+(`financeiro`, rotas em `/caixa`: painel de fluxo de caixa, lançamentos de entrada/saída, **Contratos** (mensalidades dos clientes,
+que alimentam as entradas e o saldo), contas, categorias e CSV; só proprietário/administrador).
 Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, entra direto).
 
 - **Por organização (o que foi vendido):** coluna `organizations.modules` (padrão `{social,dev}`). Para vender só uma gestão:
@@ -118,7 +118,7 @@ Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, e
   O proprietário sempre acessa tudo que foi contratado. O usuário só vê o que foi liberado, e o banco (RLS, função `has_module`) também impede o acesso.
 - **Clientes** têm cadastro global em `/clientes`: cada cliente marca os serviços que usa (Redes Sociais e/ou Projetos) e só
   aparece nas gestões marcadas (`clients.modules`).
-- **Migrações:** `20261118000005_modulos.sql`, `20261118000006_dev_projetos.sql` e `20261118000007_financeiro_caixa.sql`.
+- **Migrações:** `20261118000005_modulos.sql`, `20261118000006_dev_projetos.sql` e `20261118000007_financeiro_caixa.sql` e `20261118000008_contratos_no_financeiro.sql`.
 
 ## Segurança
 

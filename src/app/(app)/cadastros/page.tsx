@@ -3,7 +3,6 @@ import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { socialClientFilter } from "@/lib/social-clients";
 import { getAccess } from "@/lib/access";
-import { canSeeFinance } from "@/lib/roles";
 import { loadLists } from "@/lib/data";
 import { ErrorBox, Flash } from "@/components/ui";
 import { one, ok as okParam } from "@/lib/params";
@@ -24,7 +23,7 @@ export default async function Cadastros({ searchParams }: { searchParams: Promis
     loadLists(sb),
   ]);
   const erro = one(sp.erro);
-  const finance = canSeeFinance((await getAccess(sb))?.role);
+  const finance = (await getAccess(sb))?.modules.includes("financeiro") ?? false;
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,3 @@
-import { socialClientFilter } from "./social-clients";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FINANCE_START_MONTH } from "./constants";
 import { addMonths, firstOfMonth } from "./dates";
@@ -9,9 +8,8 @@ export type FinClient = { id: string; name: string; monthly_amount: number; due_
 export type PaymentRow = { client_id: string; ref_month: string; amount_due: number | null; paid_date: string | null; paid_amount: number | null; notes: string | null };
 
 export async function loadFinance(sb: SupabaseClient) {
-  const onlySocial = await socialClientFilter(sb);
   const [{ data: clients }, { data: fin }, { data: pays }] = await Promise.all([
-    onlySocial(sb.from("clients").select("id,name,sort").eq("is_internal", false).eq("active", true)).order("sort"),
+    sb.from("clients").select("id,name,sort").eq("is_internal", false).eq("active", true).order("sort"),
     sb.from("client_finance").select("client_id,monthly_amount,due_day"),
     sb.from("payments").select("client_id,ref_month,amount_due,paid_date,paid_amount,notes").limit(5000),
   ]);
