@@ -182,7 +182,7 @@ describe("importação de planilha", () => {
   it("valores", () => {
     expect(parseMoney("R$ 1.234,56")).toBe(1234.56);
     expect(parseMoney("120,00")).toBe(120);
-    expect(parseMoney("")).toBeNull();
+    expect(parsePrintMoney("")).toBeNull();
   });
   it("linhas da planilha de saídas", () => {
     const r = parseEntryLines("Chuteira     20/11/2026    Pendente\nVivo Empresarial\t17/11/2026\tR$ 72,50\tPendente\tFatura vencida em 25/10/2026\nKoin\t30/11/2026\tR$ 44,78\tPendente\t02/12\nsem data aqui\nPagaleve 27/11/2026 R$ 25,27 Pago Compra iFood 2/4");
@@ -321,5 +321,24 @@ describe("marco inicial (antes × depois)", () => {
     expect(lastSunday("2026-11-18")).toBe("2026-11-15");
     expect(lastSunday("2026-11-15")).toBe("2026-11-15");
     expect(lastSunday("2026-11-16")).toBe("2026-11-15");
+  });
+});
+
+import { defaultSteps, margin as printMargin, nextStatus, parseMoney as parsePrintMoney, stepProgress, isLateJob } from "./impressos";
+describe("impressos", () => {
+  it("fluxo e atraso", () => {
+    expect(nextStatus("briefing")).toBe("criacao");
+    expect(nextStatus("entregue")).toBeNull();
+    expect(isLateJob("2026-01-01", "criacao", "2026-02-01")).toBe(true);
+    expect(isLateJob("2026-01-01", "entregue", "2026-02-01")).toBe(false);
+  });
+  it("valores e etapas", () => {
+    expect(parsePrintMoney("1.234,56")).toBe(1234.56);
+    expect(parsePrintMoney("R$ 90")).toBe(90);
+    expect(parsePrintMoney("")).toBeNull();
+    expect(printMargin(500, 320)).toEqual({ value: 180, pct: 36 });
+    expect(printMargin(null, 3)).toBeNull();
+    expect(stepProgress([{ done: true }, { done: false }])).toEqual({ total: 2, done: 1, pct: 50 });
+    expect(defaultSteps("revista").length).toBeGreaterThan(defaultSteps("zzz").length - 1);
   });
 });

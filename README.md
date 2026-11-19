@@ -114,6 +114,10 @@ O sistema tem três gestões no mesmo pacote: **Redes Sociais** (`social`, rotas
 (`dev`, rotas em `/dev`: Painel, Projetos com quadro Kanban, marcos de entrega, Minhas tarefas e Horas) e **Financeiro**
 (`financeiro`, rotas em `/caixa`: painel de fluxo de caixa, lançamentos de entrada/saída, **Contratos** (mensalidades dos clientes,
 que alimentam as entradas e o saldo), contas, categorias e CSV; só proprietário/administrador).
+**Materiais Impressos** (`impressos`, rotas em `/impressos`): quadro por situação (briefing → criação → aprovação do cliente →
+gráfica → acabamento → pronto → entregue), trabalhos (revista, cartão de visita, folder, banner…) com tiragem, formato, papel,
+acabamento, gráfica, custo, valor cobrado e margem, etapas padrão por tipo, provas/aprovações com o cliente e autoria. Migração
+`20261119000017_impressos.sql`.
 Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, entra direto).
 
 - **Por organização (o que foi vendido):** coluna `organizations.modules` (padrão `{social,dev}`). Para vender só uma gestão:
