@@ -2,14 +2,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
 import { canManageUsers } from "@/lib/roles";
+import { adminGroup, type NavEntry } from "@/lib/nav";
 import AppHeader from "@/components/AppHeader";
 
-const NAV: [string, string][] = [
+const NAV: NavEntry[] = [
   ["/dev", "Painel"],
   ["/dev/projetos", "Projetos"],
-  ["/dev/minhas", "Minhas tarefas"],
-  ["/dev/horas", "Horas"],
-  ["/clientes", "Clientes"],
+  { label: "Trabalho", items: [["/dev/minhas", "Minhas tarefas"], ["/dev/horas", "Horas"]] },
 ];
 
 /** Gestão de Projetos de Software. */
@@ -20,7 +19,7 @@ export default async function DevLayout({ children }: { children: React.ReactNod
   if (!access.modules.includes("dev")) redirect("/modulos");
   const nav = [...NAV];
   if (access.modules.includes("agenda")) nav.push(["/agenda", "Agenda"]);
-  if (canManageUsers(access.role)) nav.push(["/tempo", "Tempo"], ["/usuarios", "Usuários"]);
+  nav.push(adminGroup(canManageUsers(access.role)));
   return (
     <div className="min-h-screen">
       <AppHeader title="Projetos de Software" nav={nav} canSwitch={access.modules.length > 1} />

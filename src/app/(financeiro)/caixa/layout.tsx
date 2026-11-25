@@ -3,14 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
 import { canManageUsers } from "@/lib/roles";
 import { ensureCaixaDefaults } from "@/lib/caixa-server";
+import { adminGroup, type NavEntry } from "@/lib/nav";
 import AppHeader from "@/components/AppHeader";
 
-const NAV: [string, string][] = [
+const NAV: NavEntry[] = [
   ["/caixa", "Painel"],
   ["/caixa/lancamentos", "Lançamentos"],
   ["/caixa/contratos", "Contratos"],
   ["/caixa/cadastros", "Contas e categorias"],
-  ["/clientes", "Clientes"],
 ];
 
 /** Gestão Financeira (fluxo de caixa): só proprietário/administrador com o módulo liberado. */
@@ -22,7 +22,7 @@ export default async function CaixaLayout({ children }: { children: React.ReactN
   await ensureCaixaDefaults(sb);
   const nav = [...NAV];
   if (access.modules.includes("agenda")) nav.push(["/agenda", "Agenda"]);
-  if (canManageUsers(access.role)) nav.push(["/usuarios", "Usuários"]);
+  nav.push(adminGroup(canManageUsers(access.role), false));
   return (
     <div className="min-h-screen">
       <AppHeader title="Financeiro" nav={nav} canSwitch={access.modules.length > 1} />
