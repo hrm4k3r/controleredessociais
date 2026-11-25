@@ -85,6 +85,10 @@ export function parseMoney(v: string): number | null {
 export const brl = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
 
 /* ---------- Páginas do trabalho (ex.: anunciantes de uma revista) ---------- */
+/** Tipos de trabalho que organizam páginas/anunciantes (os demais usam só o quadro simples de etapas). */
+export const PAGED_KINDS = ["revista"];
+export const hasPages = (kind: string) => PAGED_KINDS.includes(kind);
+
 export const PAGE_KINDS = [
   { id: "anuncio", label: "Anúncio", icon: "📢" },
   { id: "materia", label: "Matéria", icon: "📰" },

@@ -14,7 +14,7 @@ import { one, ok as okParam } from "@/lib/params";
 import { fmtData, todayISO } from "@/lib/dates";
 import {
   brl, isLateJob, JOB_COLS, kindOf, margin, nextStatus, PROOF_RESULTS, proofOf, statusOf, stepProgress,
-  PAGE_COLS, type PrintJob, type PrintPage, type PrintProof, type PrintStep,
+  hasPages, PAGE_COLS, type PrintJob, type PrintPage, type PrintProof, type PrintStep,
 } from "@/lib/impressos";
 import { addProof, addStep, deleteJob, deleteProof, deleteStep, saveJob, setJobStatus, setProof, toggleStep } from "../../actions";
 
@@ -86,11 +86,12 @@ export default async function Trabalho({ params, searchParams }: { params: Promi
         <div className="card"><div className="label">Margem</div><div className="text-2xl font-extrabold text-navy">{mg ? brl(mg.value) : "—"}</div><div className="mt-1 text-xs text-slate-500">{mg?.pct != null ? `${mg.pct}% do valor` : "Informe custo e valor"}</div></div>
       </div>
 
-      {pgr.error ? (
+      {/* Páginas/anunciantes: só para revista (ou trabalho que já tenha páginas); os demais usam o quadro simples de etapas. */}
+      {(hasPages(job.kind) || pages.length > 0) && (pgr.error ? (
         <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-800">Para usar as páginas/anunciantes, rode no Supabase a migração <code>20261119000020_impressos_paginas.sql</code>.</div>
       ) : (
         <PagesBoard jobId={id} pages={pages} capacity={job.pages} people={people} names={names} />
-      )}
+      ))}
 
       <section id="etapas" className="card space-y-3">
         <h2 className="font-bold text-navy">Etapas</h2>
