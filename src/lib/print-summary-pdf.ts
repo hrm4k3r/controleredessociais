@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { fmtData } from "./dates";
+import { LOGO_BRANCO_PNG_BASE64 } from "./brand-logo";
 import { brl, fmtPages, kindOf, pageKindOf, pagesSummary, sizeLabel, type PrintJob, type PrintPage } from "./impressos";
 
 type Input = {
@@ -12,7 +13,7 @@ type Input = {
 };
 
 const W = 595.28, H = 841.89, M = 40;
-const NAVY = rgb(0.12, 0.16, 0.27), ACCENT = rgb(0.91, 0.35, 0.05), MUTED = rgb(0.39, 0.44, 0.54), LINE = rgb(0.87, 0.89, 0.93), TEXT = rgb(0.11, 0.14, 0.22);
+const NAVY = rgb(0.12, 0.16, 0.27), ACCENT = rgb(0.357, 0.278, 0.761) /* roxo Rixxer */, PINK = rgb(0.867, 0.416, 0.839), MUTED = rgb(0.39, 0.44, 0.54), LINE = rgb(0.87, 0.89, 0.93), TEXT = rgb(0.11, 0.14, 0.22);
 const COLOR: Record<string, ReturnType<typeof rgb>> = {
   aguardando_material: rgb(0.58, 0.2, 0.92), para_fazer: rgb(0.39, 0.44, 0.54), produzindo: rgb(0.92, 0.35, 0.05),
   para_conferir: rgb(0.79, 0.54, 0.02), ajustes: rgb(0.86, 0.15, 0.15), aprovado: rgb(0.09, 0.64, 0.29),
@@ -49,6 +50,10 @@ export async function buildSummaryPdf(inp: Input): Promise<Uint8Array> {
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   doc.setTitle(safe(`Resumo da produção - ${inp.job.title}`));
   doc.setAuthor("Rixxer");
+  const logo = await doc.embedPng(Buffer.from(LOGO_BRANCO_PNG_BASE64, "base64"));
+  const lerp = (t: number) => rgb(0.357 + (0.867 - 0.357) * t, 0.278 + (0.416 - 0.278) * t, 0.761 + (0.839 - 0.761) * t);
+  /** Faixa em degradê roxo → rosa (identidade Rixxer). */
+  const strip = (pg: PDFPage, yy: number, h: number) => { const n = 48, w = W / n; for (let i = 0; i < n; i++) pg.drawRectangle({ x: i * w, y: yy, width: w + 0.6, height: h, color: lerp(i / (n - 1)) }); };
   const T = (s: string) => safe(s);
 
   let page: PDFPage = doc.addPage([W, H]);
@@ -58,17 +63,24 @@ export async function buildSummaryPdf(inp: Input): Promise<Uint8Array> {
 
   const header = (first: boolean) => {
     if (first) {
-      page.drawRectangle({ x: 0, y: H - 112, width: W, height: 112, color: NAVY });
-      page.drawCircle({ x: W - 20, y: H - 12, size: 70, color: ACCENT, opacity: 0.9 });
-      page.drawText("RESUMO DA PRODUÇÃO", { x: M, y: H - 38, size: 10, font: bold, color: rgb(1, 0.7, 0.48) });
-      page.drawText(T(clip(inp.job.title, 46)), { x: M, y: H - 66, size: 22, font: bold, color: rgb(1, 1, 1) });
-      const sub = [inp.clientName, kindOf(inp.job.kind).label, `Atualizado em ${fmtData(inp.generatedAt)}`].filter(Boolean).join("  -  ");
-      page.drawText(T(sub), { x: M, y: H - 90, size: 11, font, color: rgb(0.79, 0.83, 0.92) });
-      y = H - 112 - 24;
+      const hh = 150;
+      page.drawRectangle({ x: 0, y: H - hh, width: W, height: hh, color: NAVY });
+      page.drawCircle({ x: W - 30, y: H - 30, size: 95, color: ACCENT, opacity: 0.35 });
+      page.drawCircle({ x: W - 52, y: H - 122, size: 30, color: PINK, opacity: 0.28 });
+      strip(page, H - hh - 5, 5);
+      page.drawImage(logo, { x: M, y: H - 52, width: 104, height: 104 * 172 / 1000 });
+      page.drawText("RESUMO DA PRODUÇÃO", { x: M, y: H - 84, size: 9.5, font: bold, color: rgb(0.86, 0.62, 0.95) });
+      page.drawText(T(clip(inp.job.title, 44)), { x: M, y: H - 112, size: 23, font: bold, color: rgb(1, 1, 1) });
+      const sub = [inp.clientName, kindOf(inp.job.kind).label, `Atualizado em ${fmtData(inp.generatedAt)}`].filter(Boolean).join("   -   ");
+      page.drawText(T(sub), { x: M, y: H - 134, size: 10.5, font, color: rgb(0.79, 0.83, 0.92) });
+      y = H - hh - 5 - 26;
     } else {
-      page.drawText(T(`${clip(inp.job.title, 60)} - resumo da produção`), { x: M, y: H - 28, size: 9, font, color: MUTED });
-      page.drawLine({ start: { x: M, y: H - 36 }, end: { x: W - M, y: H - 36 }, thickness: 0.5, color: LINE });
-      y = H - 56;
+      page.drawRectangle({ x: 0, y: H - 40, width: W, height: 40, color: NAVY });
+      strip(page, H - 43, 3);
+      page.drawImage(logo, { x: M, y: H - 28, width: 70, height: 70 * 172 / 1000 });
+      const t = T(`${clip(inp.job.title, 50)} - resumo da produção`);
+      page.drawText(t, { x: W - M - font.widthOfTextAtSize(t, 8.5), y: H - 25, size: 8.5, font, color: rgb(0.79, 0.83, 0.92) });
+      y = H - 66;
     }
   };
   const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
@@ -88,9 +100,10 @@ export async function buildSummaryPdf(inp: Input): Promise<Uint8Array> {
   const bw = (W - 2 * M - 3 * 10) / 4;
   boxes.forEach(([label, value, c], i) => {
     const x = M + i * (bw + 10);
-    page.drawRectangle({ x, y: y - 52, width: bw, height: 52, color: rgb(0.95, 0.96, 0.98), borderColor: LINE, borderWidth: 0.6 });
-    page.drawText(T(label), { x: x + 8, y: y - 17, size: 8.5, font, color: MUTED });
-    page.drawText(value, { x: x + 8, y: y - 42, size: 22, font: bold, color: c });
+    page.drawRectangle({ x, y: y - 52, width: bw, height: 52, color: rgb(0.96, 0.96, 0.99), borderColor: LINE, borderWidth: 0.6 });
+    page.drawRectangle({ x, y: y - 52, width: 4, height: 52, color: c });
+    page.drawText(T(label), { x: x + 13, y: y - 17, size: 8.5, font, color: MUTED });
+    page.drawText(value, { x: x + 13, y: y - 42, size: 22, font: bold, color: c });
   });
   y -= 52 + 14;
 
@@ -110,7 +123,8 @@ export async function buildSummaryPdf(inp: Input): Promise<Uint8Array> {
     const list = pagesBy(g.ids);
     if (list.length === 0) continue;
     ensure(46);
-    page.drawText(T(`${g.title} (${list.length})`), { x: M, y, size: 13, font: bold, color: g.ids[0] === "aprovado" ? COLOR.aprovado : NAVY });
+    page.drawCircle({ x: M + 4, y: y + 4, size: 4, color: COLOR[g.ids[0]] ?? NAVY });
+    page.drawText(T(`${g.title} (${list.length})`), { x: M + 14, y, size: 13, font: bold, color: NAVY });
     y -= 13;
     page.drawText(T(g.hint), { x: M, y, size: 8.5, font, color: MUTED });
     y -= 10;
@@ -145,8 +159,11 @@ export async function buildSummaryPdf(inp: Input): Promise<Uint8Array> {
   // Rodapé com numeração
   const all = doc.getPages();
   all.forEach((pg, i) => {
-    const txt = `Rixxer  -  resumo gerado em ${fmtData(inp.generatedAt)}  -  página ${i + 1}/${all.length}`;
-    pg.drawText(txt, { x: (W - font.widthOfTextAtSize(txt, 8)) / 2, y: 20, size: 8, font, color: MUTED });
+    strip(pg, 0, 4);
+    pg.drawLine({ start: { x: M, y: 30 }, end: { x: W - M, y: 30 }, thickness: 0.4, color: LINE });
+    pg.drawText(`Rixxer  -  rixxer.com.br  -  gerado em ${fmtData(inp.generatedAt)}`, { x: M, y: 16, size: 8, font, color: MUTED });
+    const pn = `Página ${i + 1}/${all.length}`;
+    pg.drawText(pn, { x: W - M - font.widthOfTextAtSize(pn, 8), y: 16, size: 8, font: bold, color: ACCENT });
   });
   return doc.save();
 }
