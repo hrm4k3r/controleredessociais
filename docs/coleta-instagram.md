@@ -4,7 +4,21 @@ Guia de onde pegar cada número no painel profissional do Instagram e em qual ca
 (*Redes Sociais → Desempenho → Métricas*). Painel conferido em 24/11/2026; o Instagram muda a interface com frequência,
 então revise este documento se algum nome deixar de existir.
 
-## Regras da coleta
+## Fechamento mensal (relatório ao cliente)
+
+O relatório enviado ao cliente é **mensal**, fechado a partir do **dia 5** de cada mês (o Google leva 2 a 3 dias
+para consolidar o mês). No sistema: *Desempenho → Fechamento mensal* (lançar) e *Relatório mensal* (link público + PNG).
+
+- Lance, para cada rede, os números do **mês inteiro** (Instagram: período personalizado do dia 1 ao último dia;
+  Google: o mês fechado). Não some as semanas: o alcance de pessoas diferentes não é somável.
+- O Google Meu Negócio é lançado **só no fechamento mensal** (com os campos próprios: chamadas, rotas, site, chat,
+  agendamentos). A planilha semanal não mostra mais essa rede.
+- A coleta **semanal** do Instagram continua para acompanhamento interno (tendência semana a semana); o print dos
+  números em andamento serve para conversar sobre o resultado parcial.
+- A partir do dia 5 o sistema mostra um lembrete enquanto o mês anterior não tiver números lançados.
+- Migração: `20261119000019_fechamento_mensal.sql`.
+
+## Regras da coleta semanal
 
 - **Quando:** todo domingo (fim da semana de segunda a domingo).
 - **Período:** sempre **Últimos 7 dias** no seletor do painel (o padrão do app pode vir em 30 dias).

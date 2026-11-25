@@ -367,3 +367,33 @@ describe("rede de dado mensal (Google)", () => {
     expect(w.reach).toBe(8);
   });
 });
+
+import { addMonths, closableMonth, fmtMes, monthlyReport, monthStart } from "./monthly";
+describe("fechamento mensal", () => {
+  it("meses e dia de fechamento (dia 5)", () => {
+    expect(monthStart("2026-11-19")).toBe("2026-11-01");
+    expect(addMonths("2026-01-01", -1)).toBe("2025-12-01");
+    expect(addMonths("2026-11-01", 2)).toBe("2027-01-01");
+    expect(fmtMes("2026-10-01")).toBe("outubro de 2026");
+    expect(closableMonth("2026-11-05")).toBe("2026-10-01");
+    expect(closableMonth("2026-11-04")).toBe("2026-09-01");
+    expect(closableMonth("2027-01-20")).toBe("2026-12-01");
+  });
+  it("compara o mês com o anterior e traz os campos do Google", () => {
+    const c = { id: "c", name: "C" };
+    const base = { followers: null, views: null, reach: null, interactions: null, clicks: null, learning: null };
+    const rows = [
+      { ...base, client_id: "c", network: "Instagram", month: "2026-09-01", followers: 10, reach: 100, interactions: 10 },
+      { ...base, client_id: "c", network: "Instagram", month: "2026-10-01", followers: 15, reach: 200, interactions: 40 },
+      { ...base, client_id: "c", network: "Google Meu Negócio", month: "2026-10-01", views: 112, interactions: 32, calls: 6, directions: 26 },
+    ];
+    const r = monthlyReport(c, ["Instagram", "Google Meu Negócio"], rows, [], "2026-10-01");
+    expect(r.prev).toBe("2026-09-01");
+    const ig = r.items[0];
+    expect(ig.lines.find((l) => l.key === "followers")!.delta).toBe(5);
+    expect(ig.lines.find((l) => l.key === "reach")!.label).toContain("(mês)");
+    const g = r.items[1];
+    expect(g.google.find((x) => x.key === "directions")!.cur).toBe(26);
+    expect(g.has).toBe(true);
+  });
+});

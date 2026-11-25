@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 // Rotas sem login: tela de login, setup, página pública do relatório (token) e cron (segredo próprio).
-const PUBLIC = [/^\/login/, /^\/setup/, /^\/r\//, /^\/e\//, /^\/api\/cron\//, /^\/_next\//, /^\/favicon/, /^\/icon/, /^\/manifest\.webmanifest$/];
+const PUBLIC = [/^\/login/, /^\/setup/, /^\/r\//, /^\/e\//, /^\/m\//, /^\/api\/cron\//, /^\/_next\//, /^\/favicon/, /^\/icon/, /^\/manifest\.webmanifest$/];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

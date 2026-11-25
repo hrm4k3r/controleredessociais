@@ -4,12 +4,13 @@ import { getAccess } from "@/lib/access";
 import { canManageUsers } from "@/lib/roles";
 import { adminGroup, type NavEntry } from "@/lib/nav";
 import AppHeader from "@/components/AppHeader";
+import MonthlyReminder from "@/components/MonthlyReminder";
 import PomodoroDock from "@/components/PomodoroDock";
 
 const NAV: NavEntry[] = [
   ["/", "Painel"],
   { label: "Conteúdo", items: [["/postagens", "Postagens"], ["/tarefas", "Tarefas"]] },
-  { label: "Desempenho", items: [["/metricas", "Métricas"], ["/resultados", "Resultados"], ["/evolucao", "Evolução"], ["/relatorio", "Relatório"]] },
+  { label: "Desempenho", items: [["/metricas", "Métricas semanais"], ["/mensal", "Fechamento mensal"], ["/mensal/relatorio", "Relatório mensal"], ["/resultados", "Resultados"], ["/evolucao", "Evolução"], ["/relatorio", "Relatório"]] },
   ["/cadastros", "Cadastros"],
 ];
 
@@ -25,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       <AppHeader title="Redes Sociais" nav={nav} canSwitch={access.modules.length > 1} />
-      <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-5"><MonthlyReminder />{children}</main>
       <PomodoroDock />
     </div>
   );

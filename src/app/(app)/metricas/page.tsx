@@ -5,8 +5,6 @@ import { addDays, fmtData, spParts, weekEnd } from "@/lib/dates";
 import { ok as okParam, weekParam } from "@/lib/params";
 import { networkRows, previousMetric } from "@/lib/aggregate";
 import { goalPct } from "@/lib/calc";
-import { GOOGLE_FIELDS } from "@/lib/constants";
-import { Fragment } from "react";
 import { Flash, WeekBar, delta, deltaColor, deltaInt, pct } from "@/components/ui";
 import CollectedAt from "@/components/CollectedAt";
 import { saveMetrics } from "./actions";
@@ -35,7 +33,7 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
       <form action={saveMetrics} className="space-y-5">
         <input type="hidden" name="week" value={week} />
         {ds.clients.map((c) => {
-          const rows = networkRows(ds, c.id, week);
+          const rows = networkRows(ds, c.id, week).filter((r) => !r.monthly); // redes de dado mensal ficam no fechamento mensal
           return (
             <section key={c.id} className="card !p-0 overflow-x-auto">
               <div className="flex items-center justify-between border-b border-line px-4 py-2">
@@ -60,9 +58,8 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
                       <input name={`${k}|${f}`} inputMode="numeric" defaultValue={cur?.[f] ?? ""} placeholder={old?.[f] != null ? `ant. ${old[f]!.toLocaleString("pt-BR")}` : ""} className="input !w-28 !bg-yellow-50 text-right" />
                     );
                     return (
-                      <Fragment key={r.network}>
-                      <tr>
-                        <td className="td font-medium">{r.network}{r.monthly && <div className="mt-1 max-w-36 text-xs font-normal text-amber-700">Dado mensal: lance só uma vez por mês, com o mês fechado.</div>}</td>
+                      <tr key={r.network}>
+                        <td className="td font-medium">{r.network}</td>
                         <td className="td">{num("followers")}</td>
                         <td className={`td num font-semibold ${deltaColor(r.newFollowers)}`}>{deltaInt(r.newFollowers)}</td>
                         <td className="td">{num("views")}<div className={`text-right text-xs ${deltaColor(r.viewsVar)}`}>{r.viewsVar != null && `${delta(r.viewsVar)} ${r.monthly ? "vs mês ant." : "vs ant."}`}</div></td>
@@ -74,22 +71,6 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
                         <td className="td num">{pct(r.engagement, 1)}</td>
                         <td className="td"><input name={`${k}|learning`} defaultValue={cur?.learning ?? ""} className="input !min-w-56 !bg-yellow-50" /></td>
                       </tr>
-                      {r.monthly && (
-                        <tr className="bg-slate-50">
-                          <td className="td text-xs font-semibold text-slate-600" colSpan={2}>Números do Google (mês)</td>
-                          <td className="td" colSpan={9}>
-                            <div className="flex flex-wrap gap-3">
-                              {GOOGLE_FIELDS.map((g) => (
-                                <label key={g.key} className="text-xs text-slate-600">
-                                  {g.label}
-                                  <input name={`${k}|${g.key}`} inputMode="numeric" defaultValue={cur?.[g.key] ?? ""} placeholder={old?.[g.key] != null ? `ant. ${old[g.key]!.toLocaleString("pt-BR")}` : ""} className="input mt-1 !w-28 !bg-yellow-50 text-right" />
-                                </label>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      </Fragment>
                     );
                   })}
                 </tbody>
@@ -99,7 +80,7 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
         })}
         <div className="sticky bottom-3 flex justify-end"><SubmitButton className="btn btn-accent shadow-lg">Salvar métricas da semana</SubmitButton></div>
       </form>
-      <p className="text-xs text-slate-500">Campos vazios ficam sem dado. “Novos seguidores” = seguidores desta semana − da semana anterior (aparece quando as duas existem). Engajamento = interações ÷ alcance. Redes de dado mensal (Google Meu Negócio) são comparadas com o lançamento anterior e não entram nos totais semanais.</p>
+      <p className="text-xs text-slate-500">Campos vazios ficam sem dado. “Novos seguidores” = seguidores desta semana − da semana anterior (aparece quando as duas existem). Engajamento = interações ÷ alcance. O Google Meu Negócio só informa números por mês: lance em <a href="/mensal" className="underline">Fechamento mensal</a>.</p>
     </div>
   );
 }
