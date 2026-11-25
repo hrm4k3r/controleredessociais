@@ -86,7 +86,7 @@ export default async function Trabalho({ params, searchParams }: { params: Promi
         <div className="card"><div className="label">Margem</div><div className="text-2xl font-extrabold text-navy">{mg ? brl(mg.value) : "—"}</div><div className="mt-1 text-xs text-slate-500">{mg?.pct != null ? `${mg.pct}% do valor` : "Informe custo e valor"}</div></div>
       </div>
 
-      {/* Páginas/anunciantes: só para revista (ou trabalho que já tenha páginas); os demais usam o quadro simples de etapas. */}
+      {/* Páginas/anunciantes: só para revista e catálogo (ou trabalho que já tenha páginas); os demais usam o quadro simples de etapas. */}
       {(hasPages(job.kind) || pages.length > 0) && (pgr.error ? (
         <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-800">Para usar as páginas/anunciantes, rode no Supabase a migração <code>20261119000020_impressos_paginas.sql</code>.</div>
       ) : (

@@ -86,7 +86,7 @@ export const brl = (v: number | null | undefined) => (v == null ? "—" : v.toLo
 
 /* ---------- Páginas do trabalho (ex.: anunciantes de uma revista) ---------- */
 /** Tipos de trabalho que organizam páginas/anunciantes (os demais usam só o quadro simples de etapas). */
-export const PAGED_KINDS = ["revista"];
+export const PAGED_KINDS = ["revista", "catalogo"];
 export const hasPages = (kind: string) => PAGED_KINDS.includes(kind);
 
 export const PAGE_KINDS = [
