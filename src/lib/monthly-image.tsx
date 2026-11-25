@@ -139,7 +139,7 @@ const summaryPage: PageDef = {
             })}
           </div>
         )}
-        <div style={{ display: "flex", fontSize: 22, fontWeight: 600, color: C.muted }}>Nas páginas seguintes: o que foi publicado e todos os números de cada rede.</div>
+        <div style={{ display: "flex", fontSize: 24, fontWeight: 600, color: C.muted, lineHeight: 1.3 }}>{report.firstMonth ? "Este é o primeiro mês de medição: ele é o ponto de partida. A partir do próximo relatório, cada número será comparado com este." : "Nas páginas seguintes: o que foi publicado e todos os números de cada rede."}</div>
       </Col>
     );
   },
@@ -250,7 +250,7 @@ const analysisPage: PageDef = {
 /** Monta as páginas do relatório conforme os dados existentes. */
 export function monthlyPages(report: MonthlyReport, deliveries: Deliveries | null): PageDef[] {
   const pages: PageDef[] = [summaryPage];
-  if (deliveries && (deliveries.total > 0 || deliveries.goal != null)) pages.push(deliveriesPage);
+  if (deliveries && deliveries.total > 0) pages.push(deliveriesPage);
   const nets = report.items.filter((i) => i.has && !i.monthly);
   for (let i = 0; i < nets.length; i += 3) pages.push(networkPage(nets.slice(i, i + 3), i / 3));
   const g = report.items.find((i) => i.monthly && i.has);

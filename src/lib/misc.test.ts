@@ -397,3 +397,15 @@ describe("fechamento mensal", () => {
     expect(g.has).toBe(true);
   });
 });
+
+describe("primeiro mês de medição", () => {
+  it("mostra os números do mês mesmo sem mês anterior", () => {
+    const base = { followers: null, views: null, reach: null, interactions: null, clicks: null, learning: null };
+    const rows = [{ ...base, client_id: "c", network: "Instagram", month: "2026-10-01", followers: 5, views: 40, reach: 10, interactions: 3 }];
+    const r = monthlyReport({ id: "c", name: "C" }, ["Instagram"], rows, [], "2026-10-01");
+    expect(r.firstMonth).toBe(true);
+    const f = r.lines.find((l) => l.key === "followers")!;
+    expect(f.after).toBe(5);
+    expect(f.delta).toBeNull();
+  });
+});

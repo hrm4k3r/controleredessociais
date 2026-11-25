@@ -1,4 +1,5 @@
-import { compare, totals, type Line, type Nums } from "./baseline";
+import { compare, METRICS, totals, type Line, type Nums } from "./baseline";
+import { engagementRate } from "./calc";
 import { GOOGLE_FIELDS, isMonthly, type GoogleField } from "./constants";
 import { toISOAfterMonths } from "./month-util";
 
@@ -43,6 +44,8 @@ export type MonthItem = {
 export type MonthlyReport = {
   client: { id: string; name: string }; month: string; prev: string;
   items: MonthItem[]; lines: Line[]; note: MonthlyNote | null;
+  /** Nenhuma rede tem mês anterior: este é o mês de partida. */
+  firstMonth: boolean;
   /** Últimos 6 meses (até `month`): seguidores somados das redes sociais, para o gráfico de evolução. */
   history: { month: string; followers: number | null }[];
 };
@@ -50,6 +53,21 @@ export type MonthlyReport = {
 const nums = (r: MonthlyRow | undefined): Nums | null => (r ? { followers: r.followers, views: r.views, reach: r.reach, interactions: r.interactions, clicks: r.clicks } : null);
 const EMPTY: Nums = { followers: null, views: null, reach: null, interactions: null, clicks: null };
 const hasAny = (n: Nums | null, r?: MonthlyRow) => !!n && (Object.values(n).some((v) => v != null) || GOOGLE_FIELDS.some((g) => r?.[g.key] != null));
+
+/** Totais só do mês atual (sem comparação): soma de cada métrica nas redes que têm o número. */
+function currentOnly(curs: Nums[]): Line[] {
+  const sumOf = (key: "followers" | "views" | "reach" | "interactions" | "clicks") => {
+    const v = curs.map((c) => c[key]).filter((x): x is number => x != null);
+    return v.length ? v.reduce((a, b) => a + b, 0) : null;
+  };
+  const base = (["followers", "reach", "views", "interactions", "clicks"] as const).map((key) => {
+    const m = METRICS.find((x) => x.key === key)!;
+    return { key, label: m.label, pct: false, before: null, after: sumOf(key), delta: null, deltaPct: null } as Line;
+  });
+  const reach = sumOf("reach"), inter = sumOf("interactions");
+  base.push({ key: "engagement", label: "Engajamento", pct: true, before: null, after: engagementRate(inter, reach), delta: null, deltaPct: null });
+  return base;
+}
 
 /** Rótulos de métrica para período mensal. */
 export const monthLabel = (label: string) => label.replace("(7 dias)", "(mês)");
@@ -70,7 +88,12 @@ export function monthlyReport(client: { id: string; name: string }, networks: st
     };
   });
   const withData = items.filter((i) => i.has && !i.monthly); // Google (visualizações do perfil) não se mistura com os totais das redes sociais
-  const lines = totals(withData.map((i) => ({ before: i.prev ?? EMPTY, after: i.cur! }))).map((l) => ({ ...l, label: monthLabel(l.label) }));
+  // Totais: com mês anterior em todas as redes, comparação completa; senão (ex.: primeiro mês), só o valor atual somado, sem variação.
+  const comparable = withData.length > 0 && withData.every((i) => i.prev && Object.values(i.prev).some((v) => v != null));
+  const lines = (comparable
+    ? totals(withData.map((i) => ({ before: i.prev!, after: i.cur! })))
+    : currentOnly(withData.map((i) => i.cur!))
+  ).map((l) => ({ ...l, label: monthLabel(l.label) }));
   // Histórico só com as redes que têm seguidores no mês do relatório e em todos os meses mostrados (comparação justa).
   const curNets = networks.filter((n) => !isMonthly(n) && mine.some((r) => r.network === n && r.month === month && r.followers != null));
   const history = [-5, -4, -3, -2, -1, 0].map((k) => {
@@ -78,7 +101,8 @@ export function monthlyReport(client: { id: string; name: string }, networks: st
     const vals = curNets.map((n) => mine.find((r) => r.network === n && r.month === m)?.followers ?? null);
     return { month: m, followers: curNets.length && vals.every((v) => v != null) ? (vals as number[]).reduce((a, b) => a + b, 0) : null };
   });
-  return { client, month, prev, items, lines, history, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
+  const firstMonth = items.every((i) => !i.prev || !Object.values(i.prev).some((v) => v != null));
+  return { client, month, prev, items, lines, history, firstMonth, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
 }
 
 export type Deliveries = {
