@@ -21,7 +21,7 @@ export default function NavMenu({ nav }: { nav: NavEntry[] }) {
   }, []);
   const cls = (on: boolean) => `${base} ${on ? "bg-surface/10 text-white" : "text-white/80"}`;
   return (
-    <nav ref={ref} className="flex flex-1 flex-wrap gap-1">
+    <nav ref={ref} className="order-last flex w-full flex-wrap justify-center gap-1 lg:order-none lg:w-auto">
       {nav.map((e) => {
         if (!isGroup(e)) return <Link key={e[0]} href={e[0]} className={cls(isActive(path, e[0]))}>{e[1]}</Link>;
         const on = e.items.some(([h]) => isActive(path, h));
