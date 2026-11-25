@@ -102,6 +102,24 @@ Observações:
 - Lance o **0** quando o painel mostra 0 (dado real). Campo em branco significa "não coletado".
 - Número zerado não gera percentual de variação no relatório (não existe % sobre zero); aparece só a diferença.
 
+## YouTube (YouTube Studio → Análises)
+
+Atenção ao período: o **Painel** do Studio mostra os "últimos 28 dias" (não é o mês fechado). Para o fechamento, abra
+**Análises** (menu à esquerda), clique no período e escolha **Personalizado**: do dia 1 ao último dia do mês
+(ex.: 1 out 2026 a 31 out 2026). As abas *Visão geral*, *Conteúdo*, *Público* e *Engajamento* usam esse período.
+
+| Campo no sistema | Onde pegar no YouTube | Exemplo (out/2026) |
+|---|---|---|
+| **Seguidores (total)** | **Total de inscritos** (Painel ou topo da Visão geral) | 19 |
+| **Visualizações** | **Visualizações** (Análises → Visão geral, com o período do mês) | confirmar no período |
+| **Alcance** | **Espectadores únicos** (Análises → Público). Se a conta não mostrar, use "Público mensal" ou deixe em branco | confirmar |
+| **Interações** | **Curtidas + Comentários + Compartilhamentos** (Análises → Engajamento) | confirmar |
+| **Cliques/Visitas** | O YouTube não tem equivalente de canal; deixe em branco | em branco |
+
+Observações:
+- **Tempo de exibição (horas)** e **Inscritos ganhos** não têm campo próprio (os novos inscritos o sistema calcula pela diferença do total).
+- Número do Painel (últimos 28 dias) não serve para o fechamento: troque o período antes de lançar.
+
 ## Google Meu Negócio (dado mensal)
 
 O painel do Google só informa números **por mês**, então essa rede não entra na rotina de domingo:
