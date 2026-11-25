@@ -47,8 +47,28 @@ O painel do Google só informa números **por mês**, então essa rede não entr
   anterior** ("vs mês ant."), não contra a semana anterior. Os números do Google **não entram nos totais semanais**
   do painel e do relatório (o Instagram e as demais continuam semanais); no relatório a rede aparece marcada "mês".
 - **Marco inicial e Evolução:** vale o último mês fechado como "antes", comparado com os meses seguintes.
-- **Quais números pegar:** *(a definir com os prints do painel do Google; sugestão: visualizações do perfil, ligações,
-  pedidos de rota e cliques no site)*.
+
+### Onde pegar cada número (painel *Desempenho* do Perfil da Empresa)
+
+Período: o **mês fechado** (ex.: "out. de 2026 – out. de 2026"). Todos os números vêm da mesma tela.
+
+| Campo no sistema | Onde pegar no Google | Exemplo (out/2026) |
+|---|---|---|
+| **Seguidores (total)** | — (o Google não tem seguidores) | em branco |
+| **Visualizações** | *Visão geral* → "Como as pessoas descobriram sua empresa": **número de pessoas que visualizaram o Perfil da Empresa** (soma Pesquisa + Maps, celular + computador) | 112 |
+| **Alcance** | o mesmo número acima (o Google chama de "pessoas") | 112 |
+| **Interações** | *Visão geral* → **Interações no Perfil da Empresa** (já soma chamadas, chat, agendamentos, rotas e site) | 32 |
+| **Cliques/Visitas** | aba **Cliques no website** | 0 |
+
+No campo **Aprendizado** da linha do Google, anote o detalhamento das interações, que é o que mais interessa para
+um negócio local: `Chamadas 6 · Rotas 26 · Chat 0 · Agendamentos 0 · Site 0` (abas *Chamadas*, *Orientações*,
+*Cliques no chat*, *Agendamentos* e *Cliques no website*). Opcional: as pesquisas mais comuns (ex.: "ferro velho",
+"reciclagem são lourenço mg") e a divisão Pesquisa × Maps.
+
+Observações:
+- O Google mostra "< 15" nos termos de pesquisa de baixo volume; é normal.
+- Como "Interações" já inclui os cliques no website, não some os cliques de novo.
+- Se um dia fizer sentido ter colunas próprias (chamadas, rotas, site), dá para criar campos específicos do Google.
 
 ## Futuro: coleta automática pela API da Meta
 
@@ -63,6 +83,8 @@ implementar**, pois métricas são renomeadas e descontinuadas):
 | Alcance | `reach` |
 | Interações | `total_interactions` |
 | Cliques/Visitas | `profile_views` + `profile_links_taps` |
+
+(Google Meu Negócio: a *Business Profile Performance API* traz as mesmas métricas do painel — impressões de pesquisa e Maps, chamadas, rotas, cliques no site, chat e agendamentos — por dia/mês; conferir nomes na documentação.)
 
 Pontos a resolver na implementação:
 - **Autorização:** app Meta com permissão de insights, conta Instagram profissional ligada a uma Página do Facebook,
