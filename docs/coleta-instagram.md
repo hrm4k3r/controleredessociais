@@ -68,6 +68,23 @@ Observações:
 - Mesma lógica do Instagram: *Visualizadores* é o antigo alcance, e Cliques/Visitas é a soma de visitas ao perfil com os cliques em link.
 - O cartão "Seguidores" dos Insights (0 no exemplo) é a variação no período; o sistema calcula os novos seguidores sozinho pela diferença entre os totais de dois meses.
 
+## Pinterest (Analytics → Visão geral)
+
+Período: **Personalizado**, do dia 1 ao último dia do mês fechado (ex.: 01/10/2026 a 31/10/2026), "Tipo de conteúdo: Todos".
+As métricas de público atualizam com cerca de 2 dias de atraso (mais um motivo para fechar a partir do dia 5).
+
+| Campo no sistema | Onde pegar no Pinterest | Exemplo (out/2026) |
+|---|---|---|
+| **Seguidores (total)** | Total de seguidores do perfil (página do perfil ou *Informações do Público*); não aparece na Visão geral | — |
+| **Visualizações** | **Impressões** | 3.140 |
+| **Alcance** | **Público total** | 1.870 |
+| **Interações** | **Engajamentos** | 94 |
+| **Cliques/Visitas** | **Cliques de saída** | 1 |
+
+Observações:
+- Os cartões mostram números arredondados ("3,14 mil", "1,87 mil"). Para o valor exato, passe o mouse sobre o gráfico ou use *Exportar*; se não der, lance o arredondado (3.140 e 1.870).
+- **Pins salvos** (12) e **Público engajado** (79) já estão contidos nos Engajamentos/Público total e não têm campo próprio.
+
 ## Google Meu Negócio (dado mensal)
 
 O painel do Google só informa números **por mês**, então essa rede não entra na rotina de domingo:
