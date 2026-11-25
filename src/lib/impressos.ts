@@ -111,10 +111,11 @@ export const PAGE_STATUSES = [
 export const isPageStatus = (v: string) => PAGE_STATUSES.some((s) => s.id === v);
 export const pageStatusOf = (id: string) => PAGE_STATUSES.find((s) => s.id === id) ?? PAGE_STATUSES[0];
 
-/** Tamanhos (fração de página) e quanto cada um ocupa. */
+/** Tamanhos (fração de página ou nº de páginas inteiras) e quanto cada um ocupa. */
+const WHOLE = Array.from({ length: 12 }, (_, i) => i + 1).map((n) => ({ id: String(n), label: n === 1 ? "1 página" : n === 2 ? "2 páginas (dupla)" : `${n} páginas`, frac: n }));
 export const PAGE_SIZES = [
-  { id: "2", label: "Página dupla", frac: 2 }, { id: "1", label: "1 página", frac: 1 }, { id: "1/2", label: "1/2 página", frac: 0.5 },
-  { id: "1/3", label: "1/3 de página", frac: 1 / 3 }, { id: "1/4", label: "1/4 de página", frac: 0.25 },
+  ...WHOLE,
+  { id: "1/2", label: "1/2 página", frac: 0.5 }, { id: "1/3", label: "1/3 de página", frac: 1 / 3 }, { id: "1/4", label: "1/4 de página", frac: 0.25 },
   { id: "1/6", label: "1/6 de página", frac: 1 / 6 }, { id: "1/8", label: "1/8 de página", frac: 0.125 },
 ] as const;
 export const isPageSize = (v: string) => PAGE_SIZES.some((s) => s.id === v);

@@ -421,6 +421,8 @@ describe("páginas do trabalho (revista)", () => {
     const s = pagesSummary(pages, 24);
     expect(s).toMatchObject({ total: 3, approved: 1, pct: 33, used: 1.75, free: 22.25, value: 2300 });
     expect(sizeFrac("2")).toBe(2);
+    expect(sizeFrac("3")).toBe(3);
+    expect(pagesSummary([{ status: "para_fazer", size: "3", value: null, kind: "anuncio" }], 24).used).toBe(3);
     expect(fmtPages(14.5)).toBe("14,5");
     expect(pagesSummary([], null).free).toBeNull();
   });
