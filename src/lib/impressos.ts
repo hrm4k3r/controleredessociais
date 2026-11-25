@@ -101,6 +101,7 @@ export const pageKindOf = (id: string) => PAGE_KINDS.find((k) => k.id === id) ??
 export const isPageKind = (v: string) => PAGE_KINDS.some((k) => k.id === v);
 
 export const PAGE_STATUSES = [
+  { id: "aguardando_material", label: "Aguardando material", cls: "bg-purple-100 text-purple-800" },
   { id: "para_fazer", label: "Para fazer", cls: "bg-slate-100 text-slate-700" },
   { id: "produzindo", label: "Produzindo", cls: "bg-orange-100 text-orange-800" },
   { id: "para_conferir", label: "Para conferir", cls: "bg-yellow-100 text-yellow-800" },

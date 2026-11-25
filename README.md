@@ -116,8 +116,8 @@ O sistema tem três gestões no mesmo pacote: **Redes Sociais** (`social`, rotas
 que alimentam as entradas e o saldo), contas, categorias e CSV; só proprietário/administrador).
 **Materiais Impressos** (`impressos`, rotas em `/impressos`): quadro por situação (briefing → criação → aprovação do cliente →
 gráfica → acabamento → pronto → entregue), trabalhos (revista, cartão de visita, folder, banner…) com tiragem, formato, papel,
-acabamento, gráfica, custo, valor cobrado e margem, etapas padrão por tipo, provas/aprovações com o cliente e autoria. Cada trabalho tem **páginas/anunciantes** (ex.: os anunciantes de uma revista, com tamanho, nº da página, valor do contrato, responsável e prazo) num quadro de produção (Para fazer → Produzindo → Para conferir → Ajustes → Aprovado) e resumo de ocupação. Migrações
-`20261119000017_impressos.sql` e `20261119000020_impressos_paginas.sql`.
+acabamento, gráfica, custo, valor cobrado e margem, etapas padrão por tipo, provas/aprovações com o cliente e autoria. Cada trabalho tem **páginas/anunciantes** (ex.: os anunciantes de uma revista, com tamanho, nº da página, valor do contrato, responsável e prazo) num quadro de produção (Para fazer → Produzindo → Para conferir → Ajustes → Aprovado) e resumo de ocupação (revista e catálogo). O botão **Baixar resumo (PDF)** gera o resumo da produção para enviar ao cliente (aprovadas, aguardando material, ajustes, para conferir; sem valores, ou com `?valores=1` para uso interno). Migrações
+`20261119000017_impressos.sql`, `20261119000020_impressos_paginas.sql` e `20261119000021_impressos_aguardando_material.sql`.
 Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, entra direto).
 
 - **Por organização (o que foi vendido):** coluna `organizations.modules` (padrão `{social,dev}`). Para vender só uma gestão:

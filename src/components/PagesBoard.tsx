@@ -49,6 +49,13 @@ export default function PagesBoard({ jobId, pages, capacity, people, names }: { 
           {sum.value > 0 && <span className="badge bg-green-100 text-green-800">Contratos: {brl(sum.value)}</span>}
         </div>
       </div>
+      {sum.total > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <a href={`/impressos/trabalhos/${jobId}/resumo`} className="btn btn-accent">Baixar resumo (PDF)</a>
+          <a href={`/impressos/trabalhos/${jobId}/resumo?valores=1`} className="text-xs text-slate-500 underline" title="Uso interno: inclui o valor de cada contrato">com valores dos contratos (uso interno)</a>
+          <span className="text-xs text-slate-500">Para enviar ao cliente: mostra a situação de cada página, sem valores.</span>
+        </div>
+      )}
       {sum.total > 0 && <div className="h-2 rounded bg-slate-100"><div className="h-2 rounded bg-green-500" style={{ width: `${sum.pct}%` }} /></div>}
 
       <details className="rounded-lg border border-line p-3" open={pages.length === 0}>
@@ -56,7 +63,7 @@ export default function PagesBoard({ jobId, pages, capacity, people, names }: { 
         <div className="mt-3"><PageForm jobId={jobId} people={people} /></div>
       </details>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {PAGE_STATUSES.map((col) => {
           const list = sorted.filter((p) => p.status === col.id);
           return (

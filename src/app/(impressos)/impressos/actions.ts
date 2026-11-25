@@ -184,7 +184,7 @@ export async function setPageStatus(fd: FormData) {
   const job_id = String(fd.get("job_id"));
   let status = String(fd.get("status") ?? "");
   if (fd.get("advance") === "1") {
-    const order = ["para_fazer", "produzindo", "para_conferir", "aprovado"];
+    const order = ["aguardando_material", "para_fazer", "produzindo", "para_conferir", "aprovado"];
     const cur = String(fd.get("current"));
     status = cur === "ajustes" ? "para_conferir" : order[Math.min(order.indexOf(cur) + 1, order.length - 1)] ?? "";
   }
