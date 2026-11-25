@@ -1,0 +1,65 @@
+# Coleta semanal de métricas — Instagram
+
+Guia de onde pegar cada número no painel profissional do Instagram e em qual campo do Rixxer Hub lançar
+(*Redes Sociais → Desempenho → Métricas*). Painel conferido em 24/11/2026; o Instagram muda a interface com frequência,
+então revise este documento se algum nome deixar de existir.
+
+## Regras da coleta
+
+- **Quando:** todo domingo (fim da semana de segunda a domingo).
+- **Período:** sempre **Últimos 7 dias** no seletor do painel (o padrão do app pode vir em 30 dias).
+- **Hora da coleta:** o sistema registra a hora em "Dados coletados em"; use o botão *Agora* ao lançar.
+- **Mesma fonte sempre:** no marco inicial e em todas as semanas, use os mesmos números abaixo. Misturar fontes
+  ou períodos distorce o antes × depois.
+- **Campo sem número disponível:** deixe em branco (o relatório mostra "—").
+
+## Onde pegar cada número
+
+| Campo no sistema | Onde pegar no painel do Instagram | Observação |
+|---|---|---|
+| **Seguidores (total)** | Aba **Público** → Seguidores | Total atual de seguidores. |
+| **Novos seguidores** | — (calculado) | O sistema calcula pela diferença do total da semana anterior; não digitar. |
+| **Visualizações** | Aba **Desempenho** → cartão **Visualizações** | Soma de visualizações de posts, stories, reels e vídeos ao vivo. |
+| **Alcance** | Aba **Desempenho** → cartão **Visualizadores** | O antigo "alcance": contas diferentes que viram o conteúdo. |
+| **Interações** | Aba **Desempenho** → *Interações por tipo de conteúdo*, filtro **Tudo** | Total (curtidas, comentários, compartilhamentos, salvamentos). |
+| **Cliques/Visitas** | Aba **Desempenho** → *Atividade do perfil*: **Visitas ao perfil** + **Toques no link da bio** | Lançar a **soma** dos dois. |
+
+Outras abas úteis, sem campo no sistema por enquanto: **Conteúdo** (desempenho de cada post/story, útil para
+preencher o aprendizado da semana) e **Público** (idade, cidade e gênero, só com 100 ou mais seguidores).
+
+## Exemplo (conta com 1 semana, 24/11/2026)
+
+| Campo | Valor |
+|---|---|
+| Seguidores (total) | 2 |
+| Visualizações | 28 |
+| Alcance (Visualizadores) | 4 |
+| Interações | 4 |
+| Cliques/Visitas (4 visitas + 0 toques) | 4 |
+
+## Google Meu Negócio
+
+Lançado na mesma tela de métricas. Anotar aqui, quando for definido, quais números do perfil serão usados
+(sugestão: visualizações do perfil, ligações, pedidos de rota e cliques no site).
+
+## Futuro: coleta automática pela API da Meta
+
+Objetivo: preencher esses campos sem digitação, a partir da API do Instagram (Graph API, com insights de conta
+profissional). Mapeamento pretendido (**confirmar os nomes exatos na documentação oficial da Meta no momento de
+implementar**, pois métricas são renomeadas e descontinuadas):
+
+| Campo no sistema | Métrica provável na API |
+|---|---|
+| Seguidores (total) | `followers_count` (campo da conta) |
+| Visualizações | `views` |
+| Alcance | `reach` |
+| Interações | `total_interactions` |
+| Cliques/Visitas | `profile_views` + `profile_links_taps` |
+
+Pontos a resolver na implementação:
+- **Autorização:** app Meta com permissão de insights, conta Instagram profissional ligada a uma Página do Facebook,
+  e o cliente autorizando o acesso (token de longa duração, renovado antes de expirar).
+- **Janela de 7 dias:** pedir sempre o mesmo intervalo (segunda a domingo) para manter a comparabilidade.
+- **Hora da coleta:** gravar o instante real da consulta em `collected_at`.
+- **Marcar a origem** (manual × automática) e manter o lançamento manual como alternativa quando a API falhar.
+- **Segredos:** tokens guardados no servidor (nunca no navegador); coleta pelo cron já existente.
