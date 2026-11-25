@@ -1,6 +1,6 @@
-import { addDays, weekStart } from "./dates";
+import { addDays, diffDays, weekStart } from "./dates";
 import { engagementRate, goalLevel, goalPct, hasAny, interactionsOfPost, newFollowers, rankDesc, sortByRate, sum, variation, verdict } from "./calc";
-import type { GoalLevel, Verdict } from "./constants";
+import { isMonthly, type GoalLevel, type Verdict } from "./constants";
 import type { Account, Client, Dataset, Post, PostResult } from "./types";
 
 export const isPosted = (p: Post) => p.status === "Postado";
@@ -19,6 +19,8 @@ export function postsOnNetwork(ds: Dataset, clientId: string, week: string, netw
 
 export type NetworkRow = {
   network: string;
+  /** Rede de dado mensal (comparada com o lançamento anterior, não com a semana anterior). */
+  monthly: boolean;
   hasData: boolean;
   posts: number;
   followers: number | null;
@@ -32,13 +34,20 @@ export type NetworkRow = {
   learning: string | null;
 };
 
+/** Lançamento de referência para comparar: semana anterior; nas redes mensais, o último lançamento anterior (até ~2 meses). */
+export function previousMetric(ds: Dataset, clientId: string, network: string, week: string) {
+  const mine = ds.metrics.filter((m) => m.client_id === clientId && m.network === network);
+  if (!isMonthly(network)) return mine.find((m) => m.week_start === addDays(week, -7));
+  return mine.filter((m) => m.week_start < week && diffDays(m.week_start, week) <= 70).sort((a, b) => b.week_start.localeCompare(a.week_start))[0];
+}
+
 export function networkRows(ds: Dataset, clientId: string, week: string): NetworkRow[] {
-  const prevWeek = addDays(week, -7);
   return ds.accounts.filter((a) => a.client_id === clientId).map((a) => {
     const cur = ds.metrics.find((m) => m.client_id === clientId && m.network === a.network && m.week_start === week);
-    const prev = ds.metrics.find((m) => m.client_id === clientId && m.network === a.network && m.week_start === prevWeek);
+    const prev = previousMetric(ds, clientId, a.network, week);
     return {
       network: a.network,
+      monthly: isMonthly(a.network),
       hasData: !!cur && [cur.followers, cur.views, cur.reach, cur.interactions, cur.clicks].some((v) => v != null),
       posts: postsOnNetwork(ds, clientId, week, a.network),
       followers: cur?.followers ?? null,
@@ -72,8 +81,9 @@ export type ClientWeek = {
 const sumOrNull = (xs: Array<number | null>) => (hasAny(xs) ? sum(xs) : null);
 
 export function clientWeek(ds: Dataset, client: Client, week: string): ClientWeek {
-  const rows = networkRows(ds, client.id, week);
-  const prevViews = ds.metrics.filter((m) => m.client_id === client.id && m.week_start === addDays(week, -7)).map((m) => m.views);
+  const all = networkRows(ds, client.id, week);
+  const rows = all.filter((r) => !r.monthly); // dado mensal não entra nos totais semanais
+  const prevViews = ds.metrics.filter((m) => m.client_id === client.id && m.week_start === addDays(week, -7) && !isMonthly(m.network)).map((m) => m.views);
   const views = sumOrNull(rows.map((r) => r.views));
   const done = postsDone(ds, client.id, week);
   const pct = goalPct(done, client.weekly_goal);
@@ -81,7 +91,7 @@ export function clientWeek(ds: Dataset, client: Client, week: string): ClientWee
   const interactions = sumOrNull(rows.map((r) => r.interactions));
   return {
     client, goal: client.weekly_goal, done, pct, level: goalLevel(pct),
-    followers: sumOrNull(rows.map((r) => r.followers)),
+    followers: sumOrNull(all.map((r) => r.followers)),
     newFollowers: sumOrNull(rows.map((r) => r.newFollowers)),
     views,
     viewsVar: hasAny(prevViews) ? variation(views, sum(prevViews)) : null,

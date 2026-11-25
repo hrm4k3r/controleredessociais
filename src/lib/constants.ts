@@ -2,6 +2,9 @@ export const STATUSES = ["Postado", "Agendado", "Planejado", "Não postado"] as 
 export type PostStatus = (typeof STATUSES)[number];
 
 export const DEFAULT_NETWORKS = ["Instagram", "Facebook", "TikTok", "YouTube", "Pinterest", "Google Meu Negócio"];
+/** Redes cujo painel só informa números por mês: lançadas uma vez por mês e comparadas mês contra mês. */
+export const MONTHLY_NETWORKS = ["Google Meu Negócio"];
+export const isMonthly = (network: string) => MONTHLY_NETWORKS.includes(network);
 export const DEFAULT_FORMATS = ["Reels", "Feed (imagem)", "Carrossel", "Stories", "Vídeo longo", "Texto/Legenda", "Outro"];
 export const DEFAULT_THEMES = [
   "Produto/Serviço", "Promoção/Oferta", "Bastidores", "Prova social/Depoimento",

@@ -84,7 +84,7 @@ export function NetworkRowCompact({ n }: { n: NetworkRow }) {
         <NetDot network={n.network} size={44} />
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: C.navy }}>{n.network === "Google Meu Negócio" ? "Google" : n.network}</div>
-          <div style={{ fontSize: 21, color: C.muted, fontWeight: 600 }}>{`${n.posts} ${n.posts === 1 ? "post" : "posts"}`}</div>
+          <div style={{ fontSize: 21, color: C.muted, fontWeight: 600 }}>{`${n.posts} ${n.posts === 1 ? "post" : "posts"}${n.monthly ? " · mês" : ""}`}</div>
         </div>
       </div>
       {n.hasData ? (
@@ -95,7 +95,7 @@ export function NetworkRowCompact({ n }: { n: NetworkRow }) {
           <Metric label="Engaj." value={pct(n.engagement)} big={30} />
         </>
       ) : (
-        <div style={{ fontSize: 24, color: C.muted }}>Sem números nesta semana</div>
+        <div style={{ fontSize: 24, color: C.muted }}>{n.monthly ? "Dado mensal: sem lançamento nesta semana" : "Sem números nesta semana"}</div>
       )}
     </div>
   );

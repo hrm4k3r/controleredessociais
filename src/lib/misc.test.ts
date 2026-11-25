@@ -342,3 +342,28 @@ describe("impressos", () => {
     expect(defaultSteps("revista").length).toBeGreaterThan(defaultSteps("zzz").length - 1);
   });
 });
+
+import { clientWeek, networkRows as netRows } from "./aggregate";
+import { isMonthly } from "./constants";
+describe("rede de dado mensal (Google)", () => {
+  const G = "Google Meu Negócio";
+  const ds = {
+    clients: [{ id: "c", name: "C", is_internal: false, weekly_goal: 2, sort: 1 }],
+    accounts: [{ id: "a1", client_id: "c", network: "Instagram" }, { id: "a2", client_id: "c", network: G }],
+    posts: [], postNetworks: [], results: [],
+    metrics: [
+      { client_id: "c", network: G, week_start: "2026-10-05", followers: null, views: 100, reach: 50, interactions: 10, clicks: 5, learning: null },
+      { client_id: "c", network: G, week_start: "2026-11-02", followers: null, views: 150, reach: 60, interactions: 12, clicks: 6, learning: null },
+      { client_id: "c", network: "Instagram", week_start: "2026-11-02", followers: 10, views: 20, reach: 8, interactions: 2, clicks: 1, learning: null },
+    ],
+  } as unknown as Parameters<typeof clientWeek>[0];
+  it("compara com o lançamento anterior e fica fora dos totais semanais", () => {
+    expect(isMonthly(G)).toBe(true);
+    const g = netRows(ds, "c", "2026-11-02").find((r) => r.network === G)!;
+    expect(g.monthly).toBe(true);
+    expect(g.viewsVar).toBeCloseTo(0.5);
+    const w = clientWeek(ds, ds.clients[0], "2026-11-02");
+    expect(w.views).toBe(20);
+    expect(w.reach).toBe(8);
+  });
+});

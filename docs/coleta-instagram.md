@@ -37,10 +37,18 @@ preencher o aprendizado da semana) e **Público** (idade, cidade e gênero, só 
 | Interações | 4 |
 | Cliques/Visitas (4 visitas + 0 toques) | 4 |
 
-## Google Meu Negócio
+## Google Meu Negócio (dado mensal)
 
-Lançado na mesma tela de métricas. Anotar aqui, quando for definido, quais números do perfil serão usados
-(sugestão: visualizações do perfil, ligações, pedidos de rota e cliques no site).
+O painel do Google só informa números **por mês**, então essa rede não entra na rotina de domingo:
+
+- **Quando lançar:** uma vez por mês, depois que o mês fecha (a partir do dia 1º ou 2), com o número do **mês fechado**.
+  O lançamento fica na semana em que você o digitar, com a hora da coleta.
+- **No sistema:** na tela *Métricas* a linha do Google traz o aviso "Dado mensal". A variação é contra o **lançamento
+  anterior** ("vs mês ant."), não contra a semana anterior. Os números do Google **não entram nos totais semanais**
+  do painel e do relatório (o Instagram e as demais continuam semanais); no relatório a rede aparece marcada "mês".
+- **Marco inicial e Evolução:** vale o último mês fechado como "antes", comparado com os meses seguintes.
+- **Quais números pegar:** *(a definir com os prints do painel do Google; sugestão: visualizações do perfil, ligações,
+  pedidos de rota e cliques no site)*.
 
 ## Futuro: coleta automática pela API da Meta
 
