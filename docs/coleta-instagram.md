@@ -85,6 +85,23 @@ Observações:
 - Os cartões mostram números arredondados ("3,14 mil", "1,87 mil"). Para o valor exato, passe o mouse sobre o gráfico ou use *Exportar*; se não der, lance o arredondado (3.140 e 1.870).
 - **Pins salvos** (12) e **Público engajado** (79) já estão contidos nos Engajamentos/Público total e não têm campo próprio.
 
+## TikTok (Analytics / TikTok Studio → Métricas principais)
+
+Período: **Personalizado**, do dia 1 ao último dia do mês fechado (ex.: 1 de out a 31 de out).
+
+| Campo no sistema | Onde pegar no TikTok | Exemplo (out/2026) |
+|---|---|---|
+| **Seguidores (total)** | Cabeçalho do perfil: **Seguidores** | 38 |
+| **Visualizações** | **Visualizações de vídeo** | 0 |
+| **Alcance** | **Espectadores** (aba de visão geral/público, se existir na conta); se não achar, deixe em branco | em branco |
+| **Interações** | **Curtidas + Comentários + Compartilhamentos** (some os três; inclua *Salvos* se o painel mostrar) | 0 |
+| **Cliques/Visitas** | **Visualizações de perfil** (+ cliques no link da bio, se o painel mostrar) | 0 |
+
+Observações:
+- "Recompensas estimadas" não é métrica de desempenho e não entra no relatório.
+- Lance o **0** quando o painel mostra 0 (dado real). Campo em branco significa "não coletado".
+- Número zerado não gera percentual de variação no relatório (não existe % sobre zero); aparece só a diferença.
+
 ## Google Meu Negócio (dado mensal)
 
 O painel do Google só informa números **por mês**, então essa rede não entra na rotina de domingo:
