@@ -67,7 +67,7 @@ export function monthlyReport(client: { id: string; name: string }, networks: st
       learning: c?.learning ?? null,
     };
   });
-  const withData = items.filter((i) => i.has);
+  const withData = items.filter((i) => i.has && !i.monthly); // Google (visualizações do perfil) não se mistura com os totais das redes sociais
   const lines = totals(withData.map((i) => ({ before: i.prev ?? EMPTY, after: i.cur! }))).map((l) => ({ ...l, label: monthLabel(l.label) }));
   return { client, month, prev, items, lines, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
 }

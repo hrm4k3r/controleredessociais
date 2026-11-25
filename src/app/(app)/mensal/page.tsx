@@ -63,14 +63,16 @@ export default async function Fechamento({ searchParams }: { searchParams: Promi
                       <Fragment key={n}>
                         <tr>
                           <td className="td font-medium">{n}</td>
-                          {FIELDS.map(([f]) => (
+                          {FIELDS.map(([f]) => isMonthly(n) && (f === "followers" || f === "reach" || f === "clicks") ? (
+                            <td key={f} className="td text-center text-slate-300" title="O Google não informa este número">—</td>
+                          ) : (
                             <td key={f} className="td"><input name={`${k}|${f}`} inputMode="numeric" defaultValue={cur?.[f] ?? ""} placeholder={old?.[f] != null ? `ant. ${old[f]!.toLocaleString("pt-BR")}` : ""} className="input !w-28 !bg-yellow-50 text-right" /></td>
                           ))}
                           <td className="td"><input name={`${k}|learning`} defaultValue={cur?.learning ?? ""} className="input !min-w-56 !bg-yellow-50" /></td>
                         </tr>
                         {isMonthly(n) && (
                           <tr className="bg-slate-50">
-                            <td className="td text-xs font-semibold text-slate-600">Números do Google</td>
+                            <td className="td text-xs font-semibold text-slate-600">Google: visualizações do perfil e interações acima; demais números aqui</td>
                             <td className="td" colSpan={6}>
                               <div className="flex flex-wrap gap-3">
                                 {GOOGLE_FIELDS.map((g) => (

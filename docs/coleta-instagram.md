@@ -68,13 +68,11 @@ Período: o **mês fechado** (ex.: "out. de 2026 – out. de 2026"). Todos os n�
 
 | Campo no sistema | Onde pegar no Google | Exemplo (out/2026) |
 |---|---|---|
-| **Seguidores (total)** | — (o Google não tem seguidores) | em branco |
+| **Seguidores, Alcance e Cliques gerais** | O Google não informa: o sistema não mostra esses campos para o Google | — |
 | **Visualizações** | *Visão geral* → "Como as pessoas descobriram sua empresa": **número de pessoas que visualizaram o Perfil da Empresa** (soma Pesquisa + Maps, celular + computador) | 112 |
-| **Alcance** | o mesmo número acima (o Google chama de "pessoas") | 112 |
 | **Interações** | *Visão geral* → **Interações no Perfil da Empresa** (já soma chamadas, chat, agendamentos, rotas e site) | 32 |
-| **Cliques/Visitas** | aba **Cliques no website** | 0 |
 
-Logo abaixo da linha do Google, na tela *Métricas*, há campos próprios (migração `20261119000018_google_metricas.sql`):
+Logo abaixo da linha do Google, na tela *Fechamento mensal*, ficam os campos próprios:
 
 | Campo | Onde pegar |
 |---|---|

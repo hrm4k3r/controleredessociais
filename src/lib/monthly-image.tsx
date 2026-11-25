@@ -20,7 +20,11 @@ export function MonthlyImage({ report, collectedAt }: { report: MonthlyReport; c
   const cards = lines.filter((l) => l !== head).slice(0, 4);
   const nets = report.items.filter((i) => i.has && !i.monthly && i.cur);
   const google = report.items.find((i) => i.monthly && i.has);
-  const g = google?.google.filter((x) => x.cur != null) ?? [];
+  const g = google ? [
+    { key: "views", label: "Visualizações", cur: google.cur?.views ?? null, prev: google.prev?.views ?? null },
+    { key: "interactions", label: "Interações", cur: google.cur?.interactions ?? null, prev: google.prev?.interactions ?? null },
+    ...google.google,
+  ].filter((x) => x.cur != null) : [];
   const note = report.note;
   return (
     <div style={{ display: "flex", flexDirection: "column", position: "relative", width: REPORT_W, height: REPORT_H, background: C.bg, fontFamily: "Inter", color: C.text }}>
@@ -85,11 +89,11 @@ export function MonthlyImage({ report, collectedAt }: { report: MonthlyReport; c
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", fontSize: 25, fontWeight: 800, color: C.accent, letterSpacing: "1.5px", textTransform: "uppercase" }}>Google Meu Negócio</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              {g.slice(0, 6).map((x) => {
+              {g.slice(0, 8).map((x) => {
                 const d = x.prev != null && x.cur != null ? x.cur - x.prev : null;
                 return (
-                  <div key={x.key} style={{ display: "flex", flexDirection: "column", width: 186, background: C.card, borderRadius: 22, padding: "16px 18px" }}>
-                    <div style={{ display: "flex", fontSize: 19, fontWeight: 600, color: C.muted }}>{x.label}</div>
+                  <div key={x.key} style={{ display: "flex", flexDirection: "column", width: 237, background: C.card, borderRadius: 22, padding: "16px 20px" }}>
+                    <div style={{ display: "flex", fontSize: 20, fontWeight: 600, color: C.muted }}>{clip(x.label, 22)}</div>
                     <div style={{ display: "flex", fontSize: 40, fontWeight: 800, lineHeight: 1.1 }}>{int(x.cur)}</div>
                     <div style={{ display: "flex", fontSize: 22, fontWeight: 800, color: color(d) }}>{d == null ? " " : `${sign(d)}${Math.abs(d).toLocaleString("pt-BR")}`}</div>
                   </div>

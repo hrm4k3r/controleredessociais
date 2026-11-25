@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/access";
 import { spToISO } from "@/lib/dates";
 import { intField, textField } from "@/lib/form";
-import { GOOGLE_FIELDS } from "@/lib/constants";
+import { GOOGLE_FIELDS, isMonthly } from "@/lib/constants";
 import { isMonthISO } from "@/lib/monthly";
 
 const FIELDS = ["followers", "views", "reach", "interactions", "clicks", ...GOOGLE_FIELDS.map((g) => g.key)] as const;
@@ -22,6 +22,8 @@ export async function saveMonthly(fd: FormData) {
     const [client_id, network] = key.split("|");
     const row: Record<string, unknown> = { client_id, network, month, updated_at: new Date().toISOString() };
     for (const f of FIELDS) row[f] = intField(fd.get(`m|${key}|${f}`));
+    // O painel do Google não tem seguidores, alcance nem cliques gerais: só visualizações, interações e os campos próprios.
+    if (isMonthly(network)) for (const f of ["followers", "reach", "clicks"] as const) row[f] = null;
     row.learning = textField(fd.get(`m|${key}|learning`));
     if (FIELDS.every((f) => row[f] == null) && row.learning == null) {
       await sb.from("monthly_metrics").delete().eq("client_id", client_id).eq("network", network).eq("month", month);
