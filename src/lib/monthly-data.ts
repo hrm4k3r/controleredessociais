@@ -3,7 +3,8 @@ import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "./supabase/admin";
 import { socialClientFilter } from "./social-clients";
-import { monthlyReport, type MonthlyNote, type MonthlyReport, type MonthlyRow } from "./monthly";
+import { loadDataset } from "./data";
+import { deliveriesOf, monthlyReport, type Deliveries, type MonthlyNote, type MonthlyReport, type MonthlyRow } from "./monthly";
 
 export const newMonthlyToken = () => randomBytes(24).toString("base64url");
 const COLS = "client_id,network,month,followers,views,reach,interactions,clicks,calls,directions,website_clicks,chat_clicks,bookings,learning";
@@ -38,7 +39,7 @@ export function reportOf(d: MonthlyData, clientId: string, month: string): Month
 }
 
 /** Resolve o token público -> dados do cliente (somente dele) e o relatório do mês pedido. */
-export async function monthlyByToken(token: string, month: string): Promise<{ report: MonthlyReport; collectedAt: string | null; months: string[] } | null> {
+export async function monthlyByToken(token: string, month: string): Promise<{ report: MonthlyReport; deliveries: Deliveries | null; collectedAt: string | null; months: string[] } | null> {
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return null;
   const sb = createAdminClient();
   const { data } = await sb.from("monthly_links").select("client_id").eq("public_token", token).maybeSingle();
@@ -48,5 +49,8 @@ export async function monthlyByToken(token: string, month: string): Promise<{ re
   const report = reportOf(d, data.client_id as string, month);
   if (!report) return null;
   const months = [...new Set(d.rows.map((r) => r.month))].sort().reverse();
-  return { report, collectedAt: report.note?.collected_at ?? null, months };
+  const ds = await loadDataset(sb, data.client_id as string).catch(() => null);
+  const c = ds?.clients[0];
+  const deliveries = ds && c ? deliveriesOf(ds.posts, ds.postNetworks, c.id, month, c.weekly_goal) : null;
+  return { report, deliveries, collectedAt: report.note?.collected_at ?? null, months };
 }

@@ -6,6 +6,9 @@ import { todayISO, fmtColeta } from "@/lib/dates";
 import { one } from "@/lib/params";
 import { addMonths, closableMonth, fmtMes, isMonthISO, monthStart } from "@/lib/monthly";
 import { loadMonthly, reportOf } from "@/lib/monthly-data";
+import { loadDataset } from "@/lib/data";
+import { deliveriesOf } from "@/lib/monthly";
+import { monthlyPageCount } from "@/lib/monthly-image";
 import { createMonthlyLink, regenerateMonthlyLink } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +23,7 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
   if (!d) return <div className="space-y-5"><h1 className="page-title">Relatório mensal</h1><div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">Rode no Supabase a migração <code>20261119000019_fechamento_mensal.sql</code>.</div></div>;
   const { data: links } = await sb.from("monthly_links").select("client_id,public_token");
   const tokenOf = new Map((links ?? []).map((l) => [l.client_id as string, l.public_token as string]));
+  const ds = await loadDataset(sb).catch(() => null);
   const reports = d.clients.map((c) => reportOf(d, c.id, month)).filter((r): r is NonNullable<typeof r> => !!r);
 
   return (
@@ -40,6 +44,9 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
       {reports.map((r) => {
         const token = tokenOf.get(r.client.id);
         const filled = r.items.some((i) => i.has);
+        const cl = ds?.clients.find((x) => x.id === r.client.id);
+        const del = ds && cl ? deliveriesOf(ds.posts, ds.postNetworks, cl.id, month, cl.weekly_goal) : null;
+        const pages = monthlyPageCount(r, del);
         return (
           <div key={r.client.id} className="card space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -69,7 +76,7 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
                 <>
                   <input readOnly value={`${appUrl()}/m/${token}`} aria-label="Link público" className="input !w-72 text-xs" />
                   <a className="btn btn-ghost" href={`/m/${token}?mes=${month}`} target="_blank" rel="noopener noreferrer">Abrir {fmtMes(month).split(" ")[0]}</a>
-                  <a className="btn btn-ghost" href={`/m/${token}/image?mes=${month}&baixar=1`}>Baixar PNG</a>
+                  {Array.from({ length: pages }, (_, i) => i + 1).map((n) => <a key={n} className="btn btn-ghost" href={`/m/${token}/image?mes=${month}&pagina=${n}&baixar=1`}>Baixar PNG {n}/{pages}</a>)}
                   <form action={regenerateMonthlyLink}><input type="hidden" name="client_id" value={r.client.id} /><input type="hidden" name="mes" value={month} /><SubmitButton className="btn btn-ghost" pendingText="…" confirm="Gerar um novo link? O link atual deixa de funcionar.">Gerar novo link</SubmitButton></form>
                 </>
               ) : (

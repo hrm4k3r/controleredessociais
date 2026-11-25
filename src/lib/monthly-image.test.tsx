@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
-import { monthlyReport } from "./monthly";
-import { renderMonthlyImage } from "./monthly-image";
+import { deliveriesOf, monthlyReport } from "./monthly";
+import { monthlyPageCount, renderMonthlyImage } from "./monthly-image";
 
 const b = { followers: null, views: null, reach: null, interactions: null, clicks: null, learning: null };
 const hist = [["2026-06-01", 700], ["2026-07-01", 820], ["2026-08-01", 990]].map(([month, followers]) => ({ ...b, client_id: "c", network: "Instagram", month: month as string, followers: followers as number }));
@@ -16,13 +16,23 @@ const rows = [
 ];
 const notes = [{ client_id: "c", month: "2026-10-01", comment: "Mês de crescimento no Instagram, com destaque para os Reels de bastidores.", next_steps: "Reforçar chamadas para rota no Google e manter 3 reels por semana.", collected_at: "2026-11-05T13:10:00.000Z" }];
 
-describe("relatório mensal (imagem)", () => {
-  it("renderiza 1080x1920", async () => {
+const posts = [1, 2, 3].map((i) => ({ id: `p${i}`, post_date: `2026-10-0${i}`, client_id: "c", status: "Postado", format: i === 3 ? "Carrossel" : "Reels", summary: `Post de teste ${i}` }));
+const pn = [{ post_id: "p1", network: "Instagram" }, { post_id: "p2", network: "Instagram" }, { post_id: "p2", network: "Facebook" }, { post_id: "p3", network: "Instagram" }];
+
+describe("relatório mensal (imagens)", () => {
+  it("monta várias páginas e renderiza todas em 1080x1920", async () => {
     const r = monthlyReport({ id: "c", name: "Atacadão Ferrosul" }, ["Instagram", "Facebook", "Google Meu Negócio"], rows, notes, "2026-10-01");
-    const png = Buffer.from(await renderMonthlyImage(r, notes[0].collected_at).arrayBuffer());
-    expect(png.subarray(1, 4).toString()).toBe("PNG");
-    expect(png.readUInt32BE(16)).toBe(1080);
-    expect(png.readUInt32BE(20)).toBe(1920);
-    if (process.env.MONTHLY_PNG_OUT) fs.writeFileSync(process.env.MONTHLY_PNG_OUT, png);
+    const del = deliveriesOf(posts, pn, "c", "2026-10-01", 2);
+    expect(del.total).toBe(3);
+    expect(del.byFormat[0]).toEqual({ label: "Reels", n: 2 });
+    const total = monthlyPageCount(r, del);
+    expect(total).toBe(5); // resumo, publicações, redes, Google, análise
+    for (let p = 1; p <= total; p++) {
+      const png = Buffer.from(await renderMonthlyImage(r, notes[0].collected_at, del, p).arrayBuffer());
+      expect(png.subarray(1, 4).toString()).toBe("PNG");
+      expect(png.readUInt32BE(16)).toBe(1080);
+      expect(png.readUInt32BE(20)).toBe(1920);
+      if (process.env.MONTHLY_PNG_DIR) fs.writeFileSync(`${process.env.MONTHLY_PNG_DIR}/p${p}.png`, png);
+    }
   });
 });

@@ -15,6 +15,7 @@ para consolidar o mês). No sistema: *Desempenho → Fechamento mensal* (lançar
   agendamentos). A planilha semanal não mostra mais essa rede.
 - A coleta **semanal** do Instagram continua para acompanhamento interno (tendência semana a semana); o print dos
   números em andamento serve para conversar sobre o resultado parcial.
+- O relatório tem várias páginas (resumo com gráficos, publicações do mês, uma tabela completa por rede, Google e análise), cada uma baixada como PNG.
 - A partir do dia 5 o sistema mostra um lembrete enquanto o mês anterior não tiver números lançados.
 - Migração: `20261119000019_fechamento_mensal.sql`.
 

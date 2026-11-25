@@ -80,3 +80,30 @@ export function monthlyReport(client: { id: string; name: string }, networks: st
   });
   return { client, month, prev, items, lines, history, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
 }
+
+export type Deliveries = {
+  total: number; goal: number | null; pct: number | null;
+  byFormat: { label: string; n: number }[]; byNetwork: { label: string; n: number }[];
+  posts: { date: string; format: string | null; summary: string | null; networks: string[] }[];
+};
+type PostLike = { id: string; post_date: string; client_id: string; status: string; format: string | null; summary: string | null };
+
+/** Posts publicados ("Postado") no mês, com divisão por formato e rede, e a meta proporcional (meta semanal × dias do mês ÷ 7). */
+export function deliveriesOf(posts: PostLike[], postNetworks: { post_id: string; network: string }[], clientId: string, month: string, weeklyGoal: number): Deliveries {
+  const [y, m] = month.split("-").map(Number);
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const mine = posts.filter((p) => p.client_id === clientId && p.status === "Postado" && p.post_date.slice(0, 7) === month.slice(0, 7)).sort((a, b) => a.post_date.localeCompare(b.post_date));
+  const nets = (id: string) => postNetworks.filter((pn) => pn.post_id === id).map((pn) => pn.network);
+  const tally = (keys: string[]) => {
+    const map = new Map<string, number>();
+    for (const k of keys) map.set(k, (map.get(k) ?? 0) + 1);
+    return [...map].map(([label, n]) => ({ label, n })).sort((a, b) => b.n - a.n);
+  };
+  const goal = weeklyGoal > 0 ? Math.round((weeklyGoal * days) / 7) : null;
+  return {
+    total: mine.length, goal, pct: goal ? mine.length / goal : null,
+    byFormat: tally(mine.map((p) => p.format ?? "Sem formato")),
+    byNetwork: tally(mine.flatMap((p) => nets(p.id))),
+    posts: mine.map((p) => ({ date: p.post_date, format: p.format, summary: p.summary, networks: nets(p.id) })),
+  };
+}
