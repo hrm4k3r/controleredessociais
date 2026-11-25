@@ -92,12 +92,38 @@ const summaryPage: PageDef = {
   key: "resumo",
   render: ({ report }) => {
     const lines = ORDER.map((k) => report.lines.find((l) => l.key === k)!).filter((l) => l && l.after != null);
-    const head = lines.find((l) => l.key === "followers") ?? lines[0];
-    const cards = lines.filter((l) => l !== head).slice(0, 4);
+    // Redes sociais sem movimento no mês (ex.: conta nova): não abre o relatório com uma parede de zeros.
+    const quiet = lines.length === 0 || lines.every((l) => !l.after);
+    const head = quiet ? undefined : lines.find((l) => l.key === "followers") ?? lines[0];
+    const cards = quiet ? [] : lines.filter((l) => l !== head).slice(0, 4);
     const nets = report.items.filter((i) => i.has && !i.monthly && i.cur);
+    const g = report.items.find((i) => i.monthly && i.has);
+    const gcards = g ? [
+      { label: "Visualizações do perfil", cur: g.cur?.views ?? null, prev: g.prev?.views ?? null },
+      { label: "Interações no perfil", cur: g.cur?.interactions ?? null, prev: g.prev?.interactions ?? null },
+      ...g.google.filter((x) => x.key === "directions" || x.key === "calls").map((x) => ({ label: x.label === "Rotas" ? "Pedidos de rota" : x.label, cur: x.cur, prev: x.prev })),
+    ].filter((x) => x.cur != null) : [];
     return (
       <Col>
-        {head ? (
+        {g && gcards.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}><NetDot network="Google Meu Negócio" size={44} /><Title>Google Meu Negócio</Title></div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+              {gcards.map((x) => {
+                const d = x.prev != null && x.cur != null ? x.cur - x.prev : null;
+                return (
+                  <div key={x.label} style={{ display: "flex", flexDirection: "column", width: 483, background: C.card, borderRadius: 26, padding: "18px 30px" }}>
+                    <div style={{ display: "flex", fontSize: 24, fontWeight: 600, color: C.muted }}>{x.label}</div>
+                    <div style={{ display: "flex", fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>{int(x.cur)}</div>
+                    <div style={{ display: "flex", fontSize: 26, fontWeight: 800, color: color(d) }}>{d == null ? " " : `${sign(d)}${Math.abs(d).toLocaleString("pt-BR")}`}</div>
+                    {x.prev != null && x.cur != null && <PairBars before={x.prev} after={x.cur} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {head && (
           <div style={{ display: "flex", flexDirection: "column", background: C.card, borderRadius: 30, padding: "22px 40px 18px", gap: 2 }}>
             <Title>{head.key === "followers" ? "Seguidores" : head.label}</Title>
             <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
@@ -107,8 +133,6 @@ const summaryPage: PageDef = {
             <div style={{ display: "flex", fontSize: 26, fontWeight: 600, color: C.muted }}>{head.before != null ? `mês anterior: ${val(head, head.before)}` : "sem mês anterior para comparar"}</div>
             {head.key === "followers" && <History points={report.history} />}
           </div>
-        ) : (
-          <div style={{ display: "flex", background: C.card, borderRadius: 30, padding: 40, fontSize: 30, fontWeight: 600, color: C.muted }}>Os números deste mês ainda não foram lançados.</div>
         )}
         {cards.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
@@ -122,7 +146,13 @@ const summaryPage: PageDef = {
             ))}
           </div>
         )}
-        {nets.length > 0 && (
+        {quiet && nets.length > 0 && (
+          <Card gap={8}>
+            <Title>Redes sociais</Title>
+            <div style={{ display: "flex", fontSize: 28, fontWeight: 600, lineHeight: 1.35 }}>{`Sem movimento em ${fmtMes(report.month)}: ${nets.map((n) => n.network).join(", ")}. Este é o ponto de partida para os próximos meses.`}</div>
+          </Card>
+        )}
+        {!quiet && nets.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <Title>Por rede</Title>
             {nets.slice(0, 6).map((n) => {
@@ -251,7 +281,8 @@ const analysisPage: PageDef = {
 export function monthlyPages(report: MonthlyReport, deliveries: Deliveries | null): PageDef[] {
   const pages: PageDef[] = [summaryPage];
   if (deliveries && deliveries.total > 0) pages.push(deliveriesPage);
-  const nets = report.items.filter((i) => i.has && !i.monthly);
+  // Rede com tudo zerado no mês já é explicada no resumo: não ganha página de tabela.
+  const nets = report.items.filter((i) => i.has && !i.monthly && i.cur && Object.values(i.cur).some((v) => v != null && v > 0));
   for (let i = 0; i < nets.length; i += 3) pages.push(networkPage(nets.slice(i, i + 3), i / 3));
   const g = report.items.find((i) => i.monthly && i.has);
   if (g) pages.push(googlePage(g));

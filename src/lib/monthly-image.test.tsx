@@ -36,3 +36,17 @@ describe("relatório mensal (imagens)", () => {
     }
   });
 });
+
+describe("relatório mensal de conta nova", () => {
+  it("não abre com zeros: destaca o Google e explica o ponto de partida", async () => {
+    const rowsNew = [
+      { ...b, client_id: "c", network: "Instagram", month: "2026-10-01", followers: 0, views: 0, reach: 0, interactions: 0, clicks: 0 },
+      { ...b, client_id: "c", network: "Google Meu Negócio", month: "2026-10-01", views: 112, interactions: 32, calls: 6, directions: 26, website_clicks: 0, chat_clicks: 0, bookings: 0 },
+    ];
+    const r = monthlyReport({ id: "c", name: "Atacadão Ferrosul" }, ["Instagram", "Google Meu Negócio"], rowsNew, [], "2026-10-01");
+    expect(r.firstMonth).toBe(true);
+    const png = Buffer.from(await renderMonthlyImage(r, null, null, 1).arrayBuffer());
+    expect(png.readUInt32BE(16)).toBe(1080);
+    if (process.env.MONTHLY_PNG_DIR) fs.writeFileSync(`${process.env.MONTHLY_PNG_DIR}/novo1.png`, png);
+  });
+});
