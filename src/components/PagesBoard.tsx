@@ -8,29 +8,36 @@ import { deletePage, savePage, setPageStatus } from "@/app/(impressos)/impressos
 type Person = { id: string; name: string };
 const money = (v: number | null | undefined) => (v == null ? "" : String(v).replace(".", ","));
 
-function PageForm({ jobId, people, initial, today }: { jobId: string; people: Person[]; initial?: PrintPage; today?: string }) {
+function PageForm({ jobId, people, initial, today, compact }: { jobId: string; people: Person[]; initial?: PrintPage; today?: string; compact?: boolean }) {
+  // compact = dentro do cartão estreito do quadro (duas colunas no máximo); senão, formulário largo.
+  const g1 = compact ? "grid grid-cols-1 gap-3 @[19rem]:grid-cols-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-4";
+  const g2 = compact ? "grid grid-cols-1 gap-3 @[19rem]:grid-cols-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-5";
+  const g3 = compact ? "grid grid-cols-1 gap-3" : "grid gap-3 sm:grid-cols-4";
+  const span2 = compact ? "@[19rem]:col-span-2" : "lg:col-span-2";
   return (
+    <div className={compact ? "@container" : undefined}>
     <form action={savePage} className="space-y-3">
       <input type="hidden" name="job_id" value={jobId} />
       {initial && <input type="hidden" name="id" value={initial.id} />}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="lg:col-span-2"><label className="label">Anunciante / título da página</label><input name="title" required defaultValue={initial?.title} className="input" placeholder="Ex.: Mecânica MM · Matéria: O Rei do Consórcio" /></div>
+      <div className={g1}>
+        <div className={span2}><label className="label">Anunciante / título da página</label><input name="title" required defaultValue={initial?.title} className="input" placeholder="Ex.: Mecânica MM · Matéria: O Rei do Consórcio" /></div>
         <div><label className="label">Tipo</label><select name="kind" defaultValue={initial?.kind ?? "anuncio"} className="input">{PAGE_KINDS.map((k) => <option key={k.id} value={k.id}>{k.icon} {k.label}</option>)}</select></div>
         <div><label className="label">Tamanho</label><select name="size" defaultValue={initial?.size ?? "1"} className="input">{PAGE_SIZES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className={g2}>
         <div><label className="label">Nº da página</label><input name="page_number" type="number" min={1} defaultValue={initial?.page_number ?? ""} className="input" placeholder="Opcional" /></div>
-        <div><label className="label">Contratante</label><input name="advertiser" defaultValue={initial?.advertiser ?? ""} className="input" placeholder="Se diferente do título" /></div>
-        <div><label className="label">Valor do contrato (R$)</label><input name="value" inputMode="decimal" defaultValue={money(initial?.value)} className="input" placeholder="0,00" /></div>
-        <div><label className="label">Responsável</label><select name="assignee_id" defaultValue={initial?.assignee_id ?? ""} className="input"><option value="">—</option>{people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
         <div><label className="label">Prazo</label><DateInput name="due_date" defaultValue={initial?.due_date ?? (initial ? null : today)} /></div>
+        <div className={compact ? "@[19rem]:col-span-2" : ""}><label className="label">Contratante</label><input name="advertiser" defaultValue={initial?.advertiser ?? ""} className="input" placeholder="Se diferente do título" /></div>
+        <div><label className="label">Valor (R$)</label><input name="value" inputMode="decimal" defaultValue={money(initial?.value)} className="input" placeholder="0,00" /></div>
+        <div><label className="label">Responsável</label><select name="assignee_id" defaultValue={initial?.assignee_id ?? ""} className="input"><option value="">—</option>{people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className={g3}>
         <div><label className="label">Situação</label><select name="status" defaultValue={initial?.status ?? "para_fazer"} className="input">{PAGE_STATUSES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></div>
-        <div className="sm:col-span-3"><label className="label">Observações</label><input name="notes" defaultValue={initial?.notes ?? ""} className="input" placeholder="Material recebido, cores, pedidos do cliente…" /></div>
+        <div className={compact ? "" : "sm:col-span-3"}><label className="label">Observações</label>{compact ? <textarea name="notes" rows={2} defaultValue={initial?.notes ?? ""} className="input" placeholder="Material recebido, pedidos do cliente…" /> : <input name="notes" defaultValue={initial?.notes ?? ""} className="input" placeholder="Material recebido, cores, pedidos do cliente…" />}</div>
       </div>
       <SubmitButton className="btn btn-accent">{initial ? "Salvar página" : "Adicionar página"}</SubmitButton>
     </form>
+    </div>
   );
 }
 
@@ -98,7 +105,7 @@ export default function PagesBoard({ jobId, pages, capacity, people, names }: { 
                     <details>
                       <summary className="cursor-pointer text-xs font-semibold text-accent">Editar</summary>
                       <div className="mt-2 space-y-2">
-                        <PageForm jobId={jobId} people={people} initial={p} />
+                        <PageForm jobId={jobId} people={people} initial={p} compact />
                         <form action={deletePage}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="job_id" value={jobId} /><SubmitButton className="btn btn-ghost !text-red-700 !py-1 text-xs" confirm="Excluir esta página?">Excluir</SubmitButton></form>
                       </div>
                     </details>
