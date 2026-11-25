@@ -5,6 +5,8 @@ import { addDays, fmtData, spParts, weekEnd } from "@/lib/dates";
 import { ok as okParam, weekParam } from "@/lib/params";
 import { networkRows, previousMetric } from "@/lib/aggregate";
 import { goalPct } from "@/lib/calc";
+import { GOOGLE_FIELDS } from "@/lib/constants";
+import { Fragment } from "react";
 import { Flash, WeekBar, delta, deltaColor, deltaInt, pct } from "@/components/ui";
 import CollectedAt from "@/components/CollectedAt";
 import { saveMetrics } from "./actions";
@@ -58,7 +60,8 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
                       <input name={`${k}|${f}`} inputMode="numeric" defaultValue={cur?.[f] ?? ""} placeholder={old?.[f] != null ? `ant. ${old[f]!.toLocaleString("pt-BR")}` : ""} className="input !w-28 !bg-yellow-50 text-right" />
                     );
                     return (
-                      <tr key={r.network}>
+                      <Fragment key={r.network}>
+                      <tr>
                         <td className="td font-medium">{r.network}{r.monthly && <div className="mt-1 max-w-36 text-xs font-normal text-amber-700">Dado mensal: lance só uma vez por mês, com o mês fechado.</div>}</td>
                         <td className="td">{num("followers")}</td>
                         <td className={`td num font-semibold ${deltaColor(r.newFollowers)}`}>{deltaInt(r.newFollowers)}</td>
@@ -71,6 +74,22 @@ export default async function Metricas({ searchParams }: { searchParams: Promise
                         <td className="td num">{pct(r.engagement, 1)}</td>
                         <td className="td"><input name={`${k}|learning`} defaultValue={cur?.learning ?? ""} className="input !min-w-56 !bg-yellow-50" /></td>
                       </tr>
+                      {r.monthly && (
+                        <tr className="bg-slate-50">
+                          <td className="td text-xs font-semibold text-slate-600" colSpan={2}>Números do Google (mês)</td>
+                          <td className="td" colSpan={9}>
+                            <div className="flex flex-wrap gap-3">
+                              {GOOGLE_FIELDS.map((g) => (
+                                <label key={g.key} className="text-xs text-slate-600">
+                                  {g.label}
+                                  <input name={`${k}|${g.key}`} inputMode="numeric" defaultValue={cur?.[g.key] ?? ""} placeholder={old?.[g.key] != null ? `ant. ${old[g.key]!.toLocaleString("pt-BR")}` : ""} className="input mt-1 !w-28 !bg-yellow-50 text-right" />
+                                </label>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </Fragment>
                     );
                   })}
                 </tbody>

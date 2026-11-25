@@ -12,6 +12,8 @@ export type PostResult = {
 export type WeeklyMetric = {
   client_id: string; network: string; week_start: string; followers: number | null; views: number | null;
   reach: number | null; interactions: number | null; clicks: number | null; learning: string | null;
+  /** Só Google Meu Negócio (dado mensal). */
+  calls?: number | null; directions?: number | null; website_clicks?: number | null; chat_clicks?: number | null; bookings?: number | null;
 };
 export type WeeklyNote = { client_id: string; week_start: string; comment: string | null; next_steps: string | null; public_token: string | null; collected_at?: string | null };
 

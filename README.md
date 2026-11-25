@@ -127,7 +127,7 @@ Depois do login, `/modulos` pergunta qual gestão abrir (com uma só liberada, e
   O proprietário sempre acessa tudo que foi contratado. O usuário só vê o que foi liberado, e o banco (RLS, função `has_module`) também impede o acesso.
 - **Clientes** têm cadastro global em `/clientes`: cada cliente marca os serviços que usa (Redes Sociais e/ou Projetos) e só
   aparece nas gestões marcadas (`clients.modules`).
-- **Migrações:** `20261118000005_modulos.sql`, `20261118000006_dev_projetos.sql` e `20261118000007_financeiro_caixa.sql` e `20261118000008_contratos_no_financeiro.sql`.
+- **Migrações:** `20261118000005_modulos.sql`, `20261118000006_dev_projetos.sql` e `20261118000007_financeiro_caixa.sql` e `20261118000008_contratos_no_financeiro.sql`. Mais recentes: `…0017_impressos.sql` e `20261119000018_google_metricas.sql` (números próprios do Google).
 
 ## Segurança
 

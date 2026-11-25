@@ -43,8 +43,8 @@ export async function buildTables(sb: SupabaseClient, finance = true): Promise<R
   };
   t.metricas = {
     name: "Métricas semanais",
-    headers: ["Semana (segunda)", "Cliente", "Rede", "Seguidores", "Visualizações", "Alcance", "Interações", "Cliques/visitas", "Aprendizado / ação"],
-    rows: ds.metrics.map((m) => [m.week_start, cname.get(m.client_id) ?? "", m.network, m.followers, m.views, m.reach, m.interactions, m.clicks, m.learning]),
+    headers: ["Semana (segunda)", "Cliente", "Rede", "Seguidores", "Visualizações", "Alcance", "Interações", "Cliques/visitas", "Aprendizado / ação", "Google: chamadas", "Google: rotas", "Google: cliques no site", "Google: cliques no chat", "Google: agendamentos"],
+    rows: ds.metrics.map((m) => [m.week_start, cname.get(m.client_id) ?? "", m.network, m.followers, m.views, m.reach, m.interactions, m.clicks, m.learning, m.calls ?? null, m.directions ?? null, m.website_clicks ?? null, m.chat_clicks ?? null, m.bookings ?? null]),
   };
   if (finance) t.pagamentos = {
     name: "Pagamentos",

@@ -27,7 +27,10 @@ export async function loadDataset(sb: SupabaseClient, clientId?: string): Promis
   const ids = new Set(posts.map((p) => p.id));
   const postNetworks = (await fetchAll<PostNetwork>((a, b) => sb.from("post_networks").select("post_id,network").order("post_id").order("network").range(a, b))).filter((x) => ids.has(x.post_id));
   const results = (await fetchAll<PostResult>((a, b) => sb.from("post_results").select("post_id,network,views,reach,likes,comments,shares,saves,clicks").order("post_id").order("network").range(a, b))).filter((x) => ids.has(x.post_id));
-  const metrics = await fetchAll<WeeklyMetric>((a, b) => byClient(sb.from("weekly_metrics").select("client_id,network,week_start,followers,views,reach,interactions,clicks,learning")).order("week_start").order("network").range(a, b));
+  const baseCols = "client_id,network,week_start,followers,views,reach,interactions,clicks,learning";
+  const load = (cols: string) => fetchAll<WeeklyMetric>((a, b) => byClient(sb.from("weekly_metrics").select(cols)).order("week_start").order("network").range(a, b));
+  // Antes da migração dos números do Google as colunas extras não existem: cai para as colunas básicas.
+  const metrics = await load(`${baseCols},calls,directions,website_clicks,chat_clicks,bookings`).catch(() => load(baseCols));
   return { clients, accounts, posts, postNetworks, results, metrics };
 }
 

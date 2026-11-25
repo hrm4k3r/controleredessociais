@@ -5,6 +5,15 @@ export const DEFAULT_NETWORKS = ["Instagram", "Facebook", "TikTok", "YouTube", "
 /** Redes cujo painel só informa números por mês: lançadas uma vez por mês e comparadas mês contra mês. */
 export const MONTHLY_NETWORKS = ["Google Meu Negócio"];
 export const isMonthly = (network: string) => MONTHLY_NETWORKS.includes(network);
+/** Números próprios do Google Meu Negócio (colunas de weekly_metrics). */
+export const GOOGLE_FIELDS = [
+  { key: "calls", label: "Chamadas" },
+  { key: "directions", label: "Rotas" },
+  { key: "website_clicks", label: "Cliques no site" },
+  { key: "chat_clicks", label: "Cliques no chat" },
+  { key: "bookings", label: "Agendamentos" },
+] as const;
+export type GoogleField = (typeof GOOGLE_FIELDS)[number]["key"];
 export const DEFAULT_FORMATS = ["Reels", "Feed (imagem)", "Carrossel", "Stories", "Vídeo longo", "Texto/Legenda", "Outro"];
 export const DEFAULT_THEMES = [
   "Produto/Serviço", "Promoção/Oferta", "Bastidores", "Prova social/Depoimento",

@@ -60,15 +60,21 @@ Período: o **mês fechado** (ex.: "out. de 2026 – out. de 2026"). Todos os n�
 | **Interações** | *Visão geral* → **Interações no Perfil da Empresa** (já soma chamadas, chat, agendamentos, rotas e site) | 32 |
 | **Cliques/Visitas** | aba **Cliques no website** | 0 |
 
-No campo **Aprendizado** da linha do Google, anote o detalhamento das interações, que é o que mais interessa para
-um negócio local: `Chamadas 6 · Rotas 26 · Chat 0 · Agendamentos 0 · Site 0` (abas *Chamadas*, *Orientações*,
-*Cliques no chat*, *Agendamentos* e *Cliques no website*). Opcional: as pesquisas mais comuns (ex.: "ferro velho",
-"reciclagem são lourenço mg") e a divisão Pesquisa × Maps.
+Logo abaixo da linha do Google, na tela *Métricas*, há campos próprios (migração `20261119000018_google_metricas.sql`):
+
+| Campo | Onde pegar |
+|---|---|
+| **Chamadas** | aba *Chamadas* (ex.: 6) |
+| **Rotas** | aba *Orientações* (ex.: 26) |
+| **Cliques no site** | aba *Cliques no website* (ex.: 0) |
+| **Cliques no chat** | aba *Cliques no chat* (ex.: 0) |
+| **Agendamentos** | aba *Agendamentos* (ex.: 0) |
+
+Eles também saem na exportação CSV. O campo *Aprendizado* fica livre para o que você quiser anotar (pesquisas mais comuns, divisão Pesquisa × Maps).
 
 Observações:
 - O Google mostra "< 15" nos termos de pesquisa de baixo volume; é normal.
 - Como "Interações" já inclui os cliques no website, não some os cliques de novo.
-- Se um dia fizer sentido ter colunas próprias (chamadas, rotas, site), dá para criar campos específicos do Google.
 
 ## Futuro: coleta automática pela API da Meta
 

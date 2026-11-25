@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isValidISO, spToISO } from "@/lib/dates";
 import { intField, textField } from "@/lib/form";
+import { GOOGLE_FIELDS, isMonthly } from "@/lib/constants";
 
 const FIELDS = ["followers", "views", "reach", "interactions", "clicks"] as const;
 
@@ -19,7 +20,10 @@ export async function saveMetrics(fd: FormData) {
     const row: Record<string, unknown> = { client_id, network, week_start: week, updated_at: new Date().toISOString() };
     for (const f of FIELDS) row[f] = intField(fd.get(`m|${key}|${f}`));
     row.learning = textField(fd.get(`m|${key}|learning`));
-    const empty = FIELDS.every((f) => row[f] == null) && row.learning == null;
+    // Números próprios do Google (só vêm no formulário da linha mensal).
+    let extras = false;
+    if (isMonthly(network)) for (const g of GOOGLE_FIELDS) { row[g.key] = intField(fd.get(`m|${key}|${g.key}`)); extras ||= row[g.key] != null; }
+    const empty = FIELDS.every((f) => row[f] == null) && row.learning == null && !extras;
     if (empty) {
       await sb.from("weekly_metrics").delete().eq("client_id", client_id).eq("network", network).eq("week_start", week);
     } else upserts.push(row);
