@@ -59,7 +59,7 @@ export default async function Postagens({ searchParams }: { searchParams: Promis
           <tbody>
             {posts.length === 0 && <tr><td className="td text-slate-500" colSpan={9}>Nenhum post nesta semana{clientFilter ? " para este cliente" : ""}.</td></tr>}
             {posts.map((p) => (
-              <tr key={p.id} className="hover:bg-orange-50/40">
+              <tr key={p.id} className="hover:bg-accent/5">
                 <td className="td whitespace-nowrap">{diaSemana(p.post_date)} {fmtDiaMes(p.post_date)}</td>
                 <td className="td font-medium">{nameOf.get(p.client_id)}</td>
                 <td className="td">{p.format ?? "—"}</td>

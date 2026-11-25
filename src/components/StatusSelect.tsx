@@ -29,7 +29,7 @@ export default function StatusSelect({ id, status }: { id: string; status: strin
             if (!r.ok) { setValue(prev); setErr(r.error ?? "Erro ao salvar."); }
           });
         }}
-        className={`rounded-full border-0 px-2 py-1 text-xs font-semibold outline-none focus:ring-2 focus:ring-orange-300 disabled:opacity-60 ${CLS[value] ?? ""}`}
+        className={`rounded-full border-0 px-2 py-1 text-xs font-semibold outline-none focus:ring-2 focus:ring-accent/40 disabled:opacity-60 ${CLS[value] ?? ""}`}
       >
         {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>

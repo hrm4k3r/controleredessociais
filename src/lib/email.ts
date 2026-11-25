@@ -26,13 +26,13 @@ export function buildEmail(clientName: string, week: string, link: string, colle
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#eef1f6;font-family:Arial,Helvetica,sans-serif;color:#1b2437">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#1f2a44;padding:24px 28px"><div style="color:#e8590c;font-size:12px;font-weight:bold;letter-spacing:2px">RELATÓRIO SEMANAL</div>
+<tr><td style="background:#1f2a44;padding:24px 28px"><div style="color:#e9a6ea;font-size:12px;font-weight:bold;letter-spacing:2px">RELATÓRIO SEMANAL</div>
 <div style="color:#fff;font-size:24px;font-weight:bold;margin-top:6px">${esc(clientName)}</div>
 <div style="color:#c9d3ea;font-size:15px;margin-top:4px">Semana de ${esc(periodo)}</div></td></tr>
 <tr><td style="padding:24px 28px;font-size:16px;line-height:1.5">
 <p style="margin:0 0 14px">Olá! Segue o relatório de redes sociais da semana de <b>${esc(periodo)}</b>.${coleta ? ` Dados coletados em ${esc(coleta)}.` : ""}</p>
 <p style="margin:0 0 20px">A imagem em formato Stories vai em anexo. Para ver direto no celular, use o botão abaixo:</p>
-<p style="margin:0 0 24px"><a href="${esc(link)}" style="background:#e8590c;color:#fff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:10px;display:inline-block">Ver relatório no celular</a></p>
+<p style="margin:0 0 24px"><a href="${esc(link)}" style="background:#5b47c2;color:#fff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:10px;display:inline-block">Ver relatório no celular</a></p>
 <p style="margin:0;color:#64708a;font-size:13px">Qualquer dúvida é só responder este e-mail.</p>
 </td></tr></table></td></tr></table></body></html>`;
   const text = `Olá! Segue o relatório de redes sociais de ${clientName} — semana de ${periodo}.${coleta ? ` Dados coletados em ${coleta}.` : ""}\nVer no celular: ${link}\nA imagem em formato Stories está em anexo.`;
@@ -87,13 +87,13 @@ export function buildMonthlyEmail(clientName: string, month: string, link: strin
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#eef1f6;font-family:Arial,Helvetica,sans-serif;color:#1b2437">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#1f2a44;padding:24px 28px"><div style="color:#e8590c;font-size:12px;font-weight:bold;letter-spacing:2px">RELATÓRIO MENSAL</div>
+<tr><td style="background:#1f2a44;padding:24px 28px"><div style="color:#e9a6ea;font-size:12px;font-weight:bold;letter-spacing:2px">RELATÓRIO MENSAL</div>
 <div style="color:#fff;font-size:24px;font-weight:bold;margin-top:6px">${esc(clientName)}</div>
 <div style="color:#c9d3ea;font-size:15px;margin-top:4px;text-transform:capitalize">${esc(mes)}</div></td></tr>
 <tr><td style="padding:24px 28px;font-size:16px;line-height:1.5">
 <p style="margin:0 0 14px">Olá! Segue o relatório de redes sociais de <b>${esc(mes)}</b>, com todos os números do mês comparados ao mês anterior.${coleta ? ` Dados coletados em ${esc(coleta)}.` : ""}</p>
 <p style="margin:0 0 20px">${pages > 1 ? `As ${pages} páginas do relatório vão em anexo (imagens).` : "O relatório vai em anexo (imagem)."} Para ver direto no celular, use o botão abaixo:</p>
-<p style="margin:0 0 24px"><a href="${esc(link)}" style="background:#e8590c;color:#fff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:10px;display:inline-block">Ver relatório no celular</a></p>
+<p style="margin:0 0 24px"><a href="${esc(link)}" style="background:#5b47c2;color:#fff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:10px;display:inline-block">Ver relatório no celular</a></p>
 <p style="margin:0;color:#64708a;font-size:13px">Qualquer dúvida é só responder este e-mail.</p>
 </td></tr></table></td></tr></table></body></html>`;
   const text = `Olá! Segue o relatório mensal de redes sociais de ${clientName} — ${mes}.${coleta ? ` Dados coletados em ${coleta}.` : ""}\nVer no celular: ${link}\nAs imagens do relatório estão em anexo.`;

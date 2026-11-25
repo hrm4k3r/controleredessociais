@@ -132,7 +132,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
           return (
             <section
               key={c.id}
-              className={`w-72 shrink-0 rounded-2xl bg-slate-100 p-2 ${over?.col === c.id ? "ring-2 ring-orange-300" : ""}`}
+              className={`w-72 shrink-0 rounded-2xl bg-slate-100 p-2 ${over?.col === c.id ? "ring-2 ring-accent/40" : ""}`}
               onDragOver={(e) => { if (!dragId) return; e.preventDefault(); const i = indexFromPointer(e); if (over?.col !== c.id || over.index !== i) setOver({ col: c.id, index: i }); }}
               onDrop={(e) => { e.preventDefault(); drop(c.id, over?.col === c.id ? over.index : visible.length); }}
             >
@@ -167,7 +167,7 @@ export default function Kanban({ week, initial, clients, nextWeekHref, defaultCl
                         {(t.pomodoros ?? 0) > 0 && <div className="mt-2 text-xs text-slate-600" title="Ciclos de foco concluídos">🍅 {t.pomodoros} · {durationFocus(t.focus_minutes ?? 0)} de foco</div>}
                         {t.status !== "concluido" && (
                           <button type="button" draggable={false} onClick={(e) => { e.stopPropagation(); focusOn(t); }}
-                            className={`mt-2 rounded-lg border px-2 py-1 text-xs font-semibold ${activeId === t.id ? "border-accent bg-orange-50 text-accent" : "border-line text-slate-600 hover:border-accent hover:text-accent"}`}>
+                            className={`mt-2 rounded-lg border px-2 py-1 text-xs font-semibold ${activeId === t.id ? "border-accent bg-accent/10 text-accent" : "border-line text-slate-600 hover:border-accent hover:text-accent"}`}>
                             {activeId === t.id ? "🍅 em foco" : "▶ Foco"}
                           </button>
                         )}

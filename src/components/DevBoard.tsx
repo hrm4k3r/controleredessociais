@@ -79,7 +79,7 @@ export default function DevBoard({ projectId, initial, people, milestones, names
           return (
             <section
               key={c.id}
-              className={`w-72 shrink-0 rounded-2xl bg-slate-100 p-2 ${over?.col === c.id ? "ring-2 ring-orange-300" : ""}`}
+              className={`w-72 shrink-0 rounded-2xl bg-slate-100 p-2 ${over?.col === c.id ? "ring-2 ring-accent/40" : ""}`}
               onDragOver={(e) => { if (!dragId) return; e.preventDefault(); const i = indexFromPointer(e); if (over?.col !== c.id || over.index !== i) setOver({ col: c.id, index: i }); }}
               onDrop={(e) => { e.preventDefault(); drop(c.id, over?.col === c.id ? over.index : visible.length); }}
             >
