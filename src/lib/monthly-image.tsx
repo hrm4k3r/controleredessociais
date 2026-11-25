@@ -4,6 +4,7 @@ import { fmtColeta, fmtDiaMes } from "./dates";
 import type { Line } from "./baseline";
 import { fmtMes, fmtMesCurto, type Deliveries, type MonthItem, type MonthlyReport } from "./monthly";
 import { C, NetDot, REPORT_H, REPORT_W, clip, fonts, int, pct } from "./report-image";
+import { BRAND, BrandHeaderArt, BrandStrip } from "./brand-ui";
 
 const val = (l: Line, v: number | null) => (l.pct ? pct(v) : int(v));
 const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
@@ -296,10 +297,11 @@ function Shell({ ctx, page, total, children }: { ctx: Ctx; page: number; total: 
   return (
     <div style={{ display: "flex", flexDirection: "column", position: "relative", width: REPORT_W, height: REPORT_H, background: C.bg, fontFamily: "Inter", color: C.text }}>
       <div style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #131a2e 0%, #2b3a5e 100%)", padding: "34px 60px 24px", gap: 2 }}>
-        <div style={{ position: "absolute", right: -70, top: -90, width: 320, height: 320, borderRadius: 160, background: C.accent, opacity: 0.9 }} />
-        <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: "#ffb27a", letterSpacing: "6px" }}>RELATÓRIO MENSAL</div>
+        <BrandHeaderArt />
+        <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: BRAND.label, letterSpacing: "6px" }}>RELATÓRIO MENSAL</div>
         <div style={{ display: "flex", fontSize: report.client.name.length > 22 ? 60 : 72, fontWeight: 800, color: "#fff", lineHeight: 1.05 }}>{report.client.name}</div>
         <div style={{ display: "flex", fontSize: 36, color: "#c9d3ea", fontWeight: 600 }}>{fmtMes(report.month)}</div>
+        <BrandStrip padBottom={24} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: "22px 48px 60px", gap: 16 }}>{children}</div>
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 12, display: "flex", justifyContent: "center", fontSize: 22, fontWeight: 600, color: C.muted }}>{`Rixxer · ${fmtMes(report.month)}${collectedAt ? ` · coletado em ${fmtColeta(collectedAt)}` : ""} · página ${page}/${total}`}</div>

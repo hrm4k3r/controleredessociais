@@ -4,12 +4,13 @@ import path from "node:path";
 import { fmtColeta, fmtPeriodo } from "./dates";
 import { goalText } from "./calc";
 import type { NetworkRow, ReportData, ResultRow } from "./aggregate";
+import { BRAND as BRAND_ID, BrandHeaderArt, BrandStrip } from "./brand-ui";
 
 export const REPORT_W = 1080;
 export const REPORT_H = 1920;
 
 export const C = {
-  navy: "#1f2a44", navy2: "#2b3a5e", accent: "#e8590c", bg: "#eef1f6", card: "#ffffff", text: "#1b2437", muted: "#64708a", line: "#dde2ec",
+  navy: "#1f2a44", navy2: "#2b3a5e", accent: "#5b47c2", bg: "#eef1f6", card: "#ffffff", text: "#1b2437", muted: "#64708a", line: "#dde2ec",
   green: "#16a34a", greenBg: "#dcfce7", yellow: "#ca8a04", yellowBg: "#fef3c7", red: "#dc2626", redBg: "#fee2e2", grayBg: "#e5e7eb",
 };
 
@@ -137,11 +138,11 @@ export function ReportImage({ data }: { data: ReportData }) {
       )}
       {/* Cabeçalho */}
       <div style={{ display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #131a2e 0%, #2b3a5e 100%)", padding: "44px 60px 28px", gap: 4 }}>
-        <div style={{ position: "absolute", right: -70, top: -90, width: 320, height: 320, borderRadius: 160, background: C.accent, opacity: 0.9 }} />
-        <div style={{ position: "absolute", right: 150, top: 120, width: 150, height: 150, borderRadius: 75, background: "#ffffff", opacity: 0.08 }} />
-        <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: "#ffb27a", letterSpacing: "6px" }}>RELATÓRIO SEMANAL</div>
+        <BrandHeaderArt />
+        <div style={{ display: "flex", fontSize: 28, fontWeight: 800, color: BRAND_ID.label, letterSpacing: "6px" }}>RELATÓRIO SEMANAL</div>
         <div style={{ display: "flex", fontSize: client.name.length > 22 ? 60 : 72, fontWeight: 800, color: "#fff", lineHeight: 1.05 }}>{client.name}</div>
         <div style={{ display: "flex", fontSize: 34, color: "#c9d3ea", fontWeight: 600 }}>{`Semana de ${fmtPeriodo(data.week)}`}</div>
+        <BrandStrip padBottom={28} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: "22px 48px 24px", gap: 12, overflow: "hidden" }}>
@@ -190,7 +191,7 @@ export function ReportImage({ data }: { data: ReportData }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 10, flexGrow: 1, overflow: "hidden" }}>
             {comment && (
               <div style={{ display: "flex", flexDirection: "column", background: C.navy, borderRadius: 22, padding: dense ? "14px 26px" : "18px 28px", gap: 4 }}>
-                <div style={{ display: "flex", fontSize: 24, fontWeight: 800, color: C.accent, letterSpacing: "2px" }}>COMENTÁRIO DA SEMANA</div>
+                <div style={{ display: "flex", fontSize: 24, fontWeight: 800, color: BRAND_ID.label, letterSpacing: "2px" }}>COMENTÁRIO DA SEMANA</div>
                 <div style={{ display: "flex", fontSize: dense ? 26 : 28, color: "#fff", fontWeight: 600, lineHeight: 1.25 }}>{comment}</div>
               </div>
             )}
