@@ -4,7 +4,10 @@ import { monthlyReport } from "./monthly";
 import { renderMonthlyImage } from "./monthly-image";
 
 const b = { followers: null, views: null, reach: null, interactions: null, clicks: null, learning: null };
+const hist = [["2026-06-01", 700], ["2026-07-01", 820], ["2026-08-01", 990]].map(([month, followers]) => ({ ...b, client_id: "c", network: "Instagram", month: month as string, followers: followers as number }));
+const hist2 = [["2026-06-01", 100], ["2026-07-01", 180], ["2026-08-01", 300], ["2026-09-01", 520]].map(([month, followers]) => ({ ...b, client_id: "c", network: "Facebook", month: month as string, followers: followers as number }));
 const rows = [
+  ...hist, ...hist2,
   { ...b, client_id: "c", network: "Instagram", month: "2026-09-01", followers: 1200, views: 9000, reach: 5000, interactions: 300 },
   { ...b, client_id: "c", network: "Instagram", month: "2026-10-01", followers: 1380, views: 12500, reach: 6800, interactions: 540 },
   { ...b, client_id: "c", network: "Facebook", month: "2026-10-01", followers: 800, views: 3000, reach: 1500, interactions: 90 },

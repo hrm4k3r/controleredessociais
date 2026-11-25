@@ -43,6 +43,8 @@ export type MonthItem = {
 export type MonthlyReport = {
   client: { id: string; name: string }; month: string; prev: string;
   items: MonthItem[]; lines: Line[]; note: MonthlyNote | null;
+  /** Últimos 6 meses (até `month`): seguidores somados das redes sociais, para o gráfico de evolução. */
+  history: { month: string; followers: number | null }[];
 };
 
 const nums = (r: MonthlyRow | undefined): Nums | null => (r ? { followers: r.followers, views: r.views, reach: r.reach, interactions: r.interactions, clicks: r.clicks } : null);
@@ -69,5 +71,12 @@ export function monthlyReport(client: { id: string; name: string }, networks: st
   });
   const withData = items.filter((i) => i.has && !i.monthly); // Google (visualizações do perfil) não se mistura com os totais das redes sociais
   const lines = totals(withData.map((i) => ({ before: i.prev ?? EMPTY, after: i.cur! }))).map((l) => ({ ...l, label: monthLabel(l.label) }));
-  return { client, month, prev, items, lines, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
+  // Histórico só com as redes que têm seguidores no mês do relatório e em todos os meses mostrados (comparação justa).
+  const curNets = networks.filter((n) => !isMonthly(n) && mine.some((r) => r.network === n && r.month === month && r.followers != null));
+  const history = [-5, -4, -3, -2, -1, 0].map((k) => {
+    const m = addMonths(month, k);
+    const vals = curNets.map((n) => mine.find((r) => r.network === n && r.month === m)?.followers ?? null);
+    return { month: m, followers: curNets.length && vals.every((v) => v != null) ? (vals as number[]).reduce((a, b) => a + b, 0) : null };
+  });
+  return { client, month, prev, items, lines, history, note: notes.find((n) => n.client_id === client.id && n.month === month) ?? null };
 }
