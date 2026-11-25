@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/access";
 import { isValidISO } from "@/lib/dates";
-import { defaultSteps, isPrintKind, isPrintStatus, isProofResult, nextStatus, parseMoney } from "@/lib/impressos";
+import { defaultSteps, isPageKind, isPageSize, isPageStatus, isPrintKind, isPrintStatus, isProofResult, nextStatus, parseMoney } from "@/lib/impressos";
 
 type SB = Awaited<ReturnType<typeof createClient>>;
 const txt = (fd: FormData, k: string) => { const v = String(fd.get(k) ?? "").trim(); return v === "" ? null : v; };
@@ -149,4 +149,56 @@ export async function deleteProof(fd: FormData) {
   if (error) throw new Error(error.message);
   refresh();
   redirect(jobUrl(String(fd.get("job_id")), "ok=1#provas"));
+}
+
+/* ---------- Páginas (ex.: anunciantes de uma revista) ---------- */
+export async function savePage(fd: FormData) {
+  const sb = await imp();
+  const job_id = String(fd.get("job_id"));
+  const id = txt(fd, "id");
+  const title = txt(fd, "title");
+  const kind = String(fd.get("kind") ?? "anuncio");
+  const size = String(fd.get("size") ?? "1");
+  const status = String(fd.get("status") ?? "para_fazer");
+  if (!title) redirect(jobUrl(job_id, "erro=pagina#paginas"));
+  if (!isPageKind(kind) || !isPageSize(size) || !isPageStatus(status)) redirect(jobUrl(job_id, "erro=dados#paginas"));
+  const row = {
+    title, kind, size, status, advertiser: txt(fd, "advertiser"), page_number: int(txt(fd, "page_number")),
+    value: parseMoney(String(fd.get("value") ?? "")), assignee_id: txt(fd, "assignee_id"), due_date: date(txt(fd, "due_date")), notes: txt(fd, "notes"),
+  };
+  if (id) {
+    const { error } = await sb.from("print_pages").update(row).eq("id", id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { data } = await sb.from("print_pages").select("position").eq("job_id", job_id).order("position", { ascending: false }).limit(1);
+    const { error } = await sb.from("print_pages").insert({ ...row, job_id, position: Number(data?.[0]?.position ?? 0) + 1000 });
+    if (error) throw new Error(error.message);
+  }
+  refresh();
+  redirect(jobUrl(job_id, "ok=1#paginas"));
+}
+
+/** Move a página entre as colunas (select) ou avança para a próxima coluna (botão). */
+export async function setPageStatus(fd: FormData) {
+  const sb = await imp();
+  const job_id = String(fd.get("job_id"));
+  let status = String(fd.get("status") ?? "");
+  if (fd.get("advance") === "1") {
+    const order = ["para_fazer", "produzindo", "para_conferir", "aprovado"];
+    const cur = String(fd.get("current"));
+    status = cur === "ajustes" ? "para_conferir" : order[Math.min(order.indexOf(cur) + 1, order.length - 1)] ?? "";
+  }
+  if (!isPageStatus(status)) redirect(jobUrl(job_id, "erro=dados#paginas"));
+  const { error } = await sb.from("print_pages").update({ status }).eq("id", String(fd.get("id")));
+  if (error) throw new Error(error.message);
+  refresh();
+  redirect(jobUrl(job_id, "ok=1#paginas"));
+}
+
+export async function deletePage(fd: FormData) {
+  const sb = await imp();
+  const { error } = await sb.from("print_pages").delete().eq("id", String(fd.get("id")));
+  if (error) throw new Error(error.message);
+  refresh();
+  redirect(jobUrl(String(fd.get("job_id")), "ok=1#paginas"));
 }

@@ -83,3 +83,52 @@ export function parseMoney(v: string): number | null {
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
 }
 export const brl = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
+
+/* ---------- Páginas do trabalho (ex.: anunciantes de uma revista) ---------- */
+export const PAGE_KINDS = [
+  { id: "anuncio", label: "Anúncio", icon: "📢" },
+  { id: "materia", label: "Matéria", icon: "📰" },
+  { id: "capa", label: "Capa", icon: "🖼️" },
+  { id: "contracapa", label: "Contracapa", icon: "📕" },
+  { id: "editorial", label: "Editorial / expediente", icon: "✍️" },
+  { id: "outro", label: "Outro", icon: "📄" },
+] as const;
+export const pageKindOf = (id: string) => PAGE_KINDS.find((k) => k.id === id) ?? PAGE_KINDS[PAGE_KINDS.length - 1];
+export const isPageKind = (v: string) => PAGE_KINDS.some((k) => k.id === v);
+
+export const PAGE_STATUSES = [
+  { id: "para_fazer", label: "Para fazer", cls: "bg-slate-100 text-slate-700" },
+  { id: "produzindo", label: "Produzindo", cls: "bg-orange-100 text-orange-800" },
+  { id: "para_conferir", label: "Para conferir", cls: "bg-yellow-100 text-yellow-800" },
+  { id: "ajustes", label: "Ajustes", cls: "bg-red-100 text-red-800" },
+  { id: "aprovado", label: "Aprovado", cls: "bg-green-100 text-green-800" },
+] as const;
+export const isPageStatus = (v: string) => PAGE_STATUSES.some((s) => s.id === v);
+export const pageStatusOf = (id: string) => PAGE_STATUSES.find((s) => s.id === id) ?? PAGE_STATUSES[0];
+
+/** Tamanhos (fração de página) e quanto cada um ocupa. */
+export const PAGE_SIZES = [
+  { id: "2", label: "Página dupla", frac: 2 }, { id: "1", label: "1 página", frac: 1 }, { id: "1/2", label: "1/2 página", frac: 0.5 },
+  { id: "1/3", label: "1/3 de página", frac: 1 / 3 }, { id: "1/4", label: "1/4 de página", frac: 0.25 },
+  { id: "1/6", label: "1/6 de página", frac: 1 / 6 }, { id: "1/8", label: "1/8 de página", frac: 0.125 },
+] as const;
+export const isPageSize = (v: string) => PAGE_SIZES.some((s) => s.id === v);
+export const sizeFrac = (id: string) => PAGE_SIZES.find((s) => s.id === id)?.frac ?? 1;
+export const sizeLabel = (id: string) => PAGE_SIZES.find((s) => s.id === id)?.label ?? id;
+
+export type PrintPage = {
+  id: string; job_id: string; kind: string; title: string; advertiser: string | null; size: string; page_number: number | null;
+  status: string; value: number | null; assignee_id: string | null; due_date: string | null; notes: string | null; position: number;
+  created_by: string | null; approved_by: string | null;
+};
+export const PAGE_COLS = "id,job_id,kind,title,advertiser,size,page_number,status,value,assignee_id,due_date,notes,position,created_by,approved_by";
+
+/** Resumo das páginas: aprovadas, páginas ocupadas (soma das frações) e valor dos contratos. */
+export function pagesSummary(pages: Pick<PrintPage, "status" | "size" | "value" | "kind">[], capacity: number | null) {
+  const approved = pages.filter((p) => p.status === "aprovado").length;
+  const used = Math.round(pages.reduce((s, p) => s + sizeFrac(p.size), 0) * 100) / 100;
+  const value = Math.round(pages.reduce((s, p) => s + Number(p.value ?? 0), 0) * 100) / 100;
+  return { total: pages.length, approved, pct: pages.length ? Math.round((approved / pages.length) * 100) : 0, used, free: capacity != null ? Math.round((capacity - used) * 100) / 100 : null, value };
+}
+/** Texto de página ocupada: 14,5 → "14,5". */
+export const fmtPages = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });

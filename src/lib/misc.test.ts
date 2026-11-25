@@ -409,3 +409,19 @@ describe("primeiro mês de medição", () => {
     expect(f.delta).toBeNull();
   });
 });
+
+import { fmtPages, pagesSummary, sizeFrac } from "./impressos";
+describe("páginas do trabalho (revista)", () => {
+  it("soma ocupação, aprovadas e valor", () => {
+    const pages = [
+      { status: "aprovado", size: "1", value: 1500, kind: "anuncio" },
+      { status: "produzindo", size: "1/2", value: 800, kind: "anuncio" },
+      { status: "para_fazer", size: "1/4", value: null, kind: "materia" },
+    ];
+    const s = pagesSummary(pages, 24);
+    expect(s).toMatchObject({ total: 3, approved: 1, pct: 33, used: 1.75, free: 22.25, value: 2300 });
+    expect(sizeFrac("2")).toBe(2);
+    expect(fmtPages(14.5)).toBe("14,5");
+    expect(pagesSummary([], null).free).toBeNull();
+  });
+});

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { loadMemberNames } from "@/lib/members";
+import { loadMemberNames, loadMembers } from "@/lib/members";
+import { getAccess } from "@/lib/access";
+import PagesBoard from "@/components/PagesBoard";
 import { ErrorBox, Flash } from "@/components/ui";
 import JobForm from "@/components/JobForm";
 import PrintHint from "@/components/PrintHint";
@@ -12,12 +14,12 @@ import { one, ok as okParam } from "@/lib/params";
 import { fmtData, todayISO } from "@/lib/dates";
 import {
   brl, isLateJob, JOB_COLS, kindOf, margin, nextStatus, PROOF_RESULTS, proofOf, statusOf, stepProgress,
-  type PrintJob, type PrintProof, type PrintStep,
+  PAGE_COLS, type PrintJob, type PrintPage, type PrintProof, type PrintStep,
 } from "@/lib/impressos";
 import { addProof, addStep, deleteJob, deleteProof, deleteStep, saveJob, setJobStatus, setProof, toggleStep } from "../../actions";
 
 export const dynamic = "force-dynamic";
-const ERR: Record<string, string> = { titulo: "Informe o título.", etapa: "Informe o nome da etapa.", dados: "Dados inválidos." };
+const ERR: Record<string, string> = { titulo: "Informe o título.", etapa: "Informe o nome da etapa.", pagina: "Informe o anunciante ou o título da página.", dados: "Dados inválidos." };
 
 export default async function Trabalho({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params;
@@ -27,12 +29,17 @@ export default async function Trabalho({ params, searchParams }: { params: Promi
   if (jr.error) return <div className="space-y-5"><PrintHint /></div>;
   if (!jr.data) notFound();
   const job = jr.data as PrintJob;
-  const [sr, pr, cr, names] = await Promise.all([
+  const access = (await getAccess(sb))!;
+  const [sr, pr, cr, names, pgr, members] = await Promise.all([
     sb.from("print_steps").select("id,job_id,title,assignee_id,due_date,done,done_by,position").eq("job_id", id).order("position"),
     sb.from("print_proofs").select("id,job_id,version,sent_at,result,notes,created_by").eq("job_id", id).order("version", { ascending: false }),
     sb.from("clients").select("id,name").eq("active", true).order("name"),
     loadMemberNames(sb),
+    sb.from("print_pages").select(PAGE_COLS).eq("job_id", id).order("position"),
+    loadMembers(sb, access.orgModules),
   ]);
+  const pages = (pgr.data ?? []) as PrintPage[];
+  const people = members.filter((m) => m.modules.includes("impressos")).map((m) => ({ id: m.id, name: m.name }));
   const steps = (sr.data ?? []) as PrintStep[];
   const proofs = (pr.data ?? []) as PrintProof[];
   const clients = (cr.data ?? []) as { id: string; name: string }[];
@@ -78,6 +85,12 @@ export default async function Trabalho({ params, searchParams }: { params: Promi
         <div className="card"><div className="label">Valor cobrado</div><div className="text-2xl font-extrabold text-navy">{brl(job.price)}</div><div className="mt-1 text-xs text-slate-500">Custo: {brl(job.cost)}</div></div>
         <div className="card"><div className="label">Margem</div><div className="text-2xl font-extrabold text-navy">{mg ? brl(mg.value) : "—"}</div><div className="mt-1 text-xs text-slate-500">{mg?.pct != null ? `${mg.pct}% do valor` : "Informe custo e valor"}</div></div>
       </div>
+
+      {pgr.error ? (
+        <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-800">Para usar as páginas/anunciantes, rode no Supabase a migração <code>20261119000020_impressos_paginas.sql</code>.</div>
+      ) : (
+        <PagesBoard jobId={id} pages={pages} capacity={job.pages} people={people} names={names} />
+      )}
 
       <section id="etapas" className="card space-y-3">
         <h2 className="font-bold text-navy">Etapas</h2>

@@ -10,16 +10,19 @@ export const dynamic = "force-dynamic";
 
 export default async function Quadro() {
   const sb = await createClient();
-  const [jr, sr, cr] = await Promise.all([
+  const [jr, sr, cr, pr] = await Promise.all([
     sb.from("print_jobs").select("id,client_id,title,kind,status,quantity,due_date,price").neq("status", "cancelado").order("due_date", { nullsFirst: false }),
     sb.from("print_steps").select("job_id,done").limit(20000),
     sb.from("clients").select("id,name"),
+    sb.from("print_pages").select("job_id,status").limit(20000), // tolerante: antes da migração a tabela não existe
   ]);
   if (jr.error) return <div className="space-y-5"><h1 className="page-title">Quadro</h1><PrintHint /></div>;
   const cname = new Map(((cr.data ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]));
   const all = (jr.data ?? []) as PrintJob[];
   const steps = new Map<string, { done: boolean }[]>();
   for (const s of (sr.data ?? []) as { job_id: string; done: boolean }[]) (steps.get(s.job_id) ?? steps.set(s.job_id, []).get(s.job_id)!).push(s);
+  const pagesBy = new Map<string, { status: string }[]>();
+  for (const p of (pr.error ? [] : (pr.data ?? [])) as { job_id: string; status: string }[]) (pagesBy.get(p.job_id) ?? pagesBy.set(p.job_id, []).get(p.job_id)!).push(p);
   const today = todayISO();
   // Entregues só aparecem no quadro se forem recentes (as demais ficam em "Trabalhos").
   const jobs = all.filter((j) => j.status !== "entregue" || (j.due_date ?? today) >= today.slice(0, 8) + "01");
@@ -54,6 +57,7 @@ export default async function Quadro() {
               {list.length === 0 && <p className="px-1 py-3 text-xs text-slate-400">Vazio</p>}
               {list.map((j) => {
                 const pg = stepProgress(steps.get(j.id) ?? []);
+                const pp = pagesBy.get(j.id) ?? [];
                 const k = kindOf(j.kind);
                 const next = nextStatus(j.status);
                 const isLate = isLateJob(j.due_date, j.status, today);
@@ -61,6 +65,7 @@ export default async function Quadro() {
                   <article key={j.id} className="card space-y-2 !p-3">
                     <Link href={`/impressos/trabalhos/${j.id}`} className="block font-semibold text-navy hover:underline">{k.icon} {j.title}</Link>
                     <div className="text-xs text-slate-500">{j.client_id ? cname.get(j.client_id) ?? "Cliente" : "Interno"}{j.quantity ? ` · ${j.quantity.toLocaleString("pt-BR")} un.` : ""}</div>
+                    {pp.length > 0 && <div className="text-[11px] font-semibold text-slate-600">📄 {pp.filter((x) => x.status === "aprovado").length}/{pp.length} páginas aprovadas</div>}
                     {pg.total > 0 && (
                       <div><div className="mb-1 text-[11px] text-slate-500">{pg.done}/{pg.total} etapas</div><div className="h-1.5 rounded bg-slate-200"><div className="h-1.5 rounded bg-green-500" style={{ width: `${pg.pct}%` }} /></div></div>
                     )}
