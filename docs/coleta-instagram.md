@@ -52,6 +52,22 @@ preencher o aprendizado da semana) e **Público** (idade, cidade e gênero, só 
 | Interações | 4 |
 | Cliques/Visitas (4 visitas + 0 toques) | 4 |
 
+## Facebook (Meta Business Suite → Insights)
+
+Período: o **mês fechado** (ex.: "1 de out de 2026 a 31 de out de 2026"), com a Página selecionada no topo.
+
+| Campo no sistema | Onde pegar no Facebook | Exemplo (out/2026) |
+|---|---|---|
+| **Seguidores (total)** | Total de seguidores da Página (cabeçalho/perfil da Página). **Não** use o cartão "Seguidores" dos Insights: ele mostra só os ganhos no período | 308 |
+| **Visualizações** | Cartão **Visualizações** | 20 |
+| **Alcance** | Cartão **Visualizadores** (pessoas diferentes que viram o conteúdo) | 16 |
+| **Interações** | Cartão **Interações com o conteúdo** | 0 |
+| **Cliques/Visitas** | **Visitas** (à Página) + **Cliques no link** | 18 + 0 = 18 |
+
+Observações:
+- Mesma lógica do Instagram: *Visualizadores* é o antigo alcance, e Cliques/Visitas é a soma de visitas ao perfil com os cliques em link.
+- O cartão "Seguidores" dos Insights (0 no exemplo) é a variação no período; o sistema calcula os novos seguidores sozinho pela diferença entre os totais de dois meses.
+
 ## Google Meu Negócio (dado mensal)
 
 O painel do Google só informa números **por mês**, então essa rede não entra na rotina de domingo:
