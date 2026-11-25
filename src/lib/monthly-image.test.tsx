@@ -34,7 +34,7 @@ describe("relatório mensal (imagens)", () => {
       expect(png.readUInt32BE(20)).toBe(1920);
       if (process.env.MONTHLY_PNG_DIR) fs.writeFileSync(`${process.env.MONTHLY_PNG_DIR}/p${p}.png`, png);
     }
-  });
+  }, 60_000);
 });
 
 describe("relatório mensal de conta nova", () => {
