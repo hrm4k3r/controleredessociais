@@ -18,6 +18,7 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
   const sp = await searchParams;
   const raw = one(sp.mes);
   const month = raw && isMonthISO(monthStart(raw)) ? monthStart(raw) : closableMonth(todayISO());
+  const env = /^\d+-\d+-\d+$/.test(one(sp.env) ?? "") ? one(sp.env)!.split("-") : null;
   const sb = await createClient();
   const d = await loadMonthly(sb);
   if (!d) return <div className="space-y-5"><h1 className="page-title">Relatório mensal</h1><div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">Rode no Supabase a migração <code>20261119000019_fechamento_mensal.sql</code>.</div></div>;
@@ -35,6 +36,7 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
         </div>
         <Link href={`/mensal?mes=${month}`} className="btn btn-ghost">Lançar números do mês</Link>
       </div>
+      {env && <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-800">Envio concluído: {env[0]} enviado(s), {env[1]} em modo teste, {env[2]} com erro.</div>}
       <div className="flex flex-wrap items-center gap-2">
         <Link href={`/mensal/relatorio?mes=${addMonths(month, -1)}`} className="btn btn-ghost" aria-label="Mês anterior">←</Link>
         <div className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold capitalize text-navy">{fmtMes(month)}</div>
@@ -77,6 +79,7 @@ export default async function RelatorioMensal({ searchParams }: { searchParams: 
                   <input readOnly value={`${appUrl()}/m/${token}`} aria-label="Link público" className="input !w-72 text-xs" />
                   <a className="btn btn-ghost" href={`/m/${token}?mes=${month}`} target="_blank" rel="noopener noreferrer">Abrir {fmtMes(month).split(" ")[0]}</a>
                   {Array.from({ length: pages }, (_, i) => i + 1).map((n) => <a key={n} className="btn btn-ghost" href={`/m/${token}/image?mes=${month}&pagina=${n}&baixar=1`}>Baixar PNG {n}/{pages}</a>)}
+                  <Link className="btn btn-accent" href={`/mensal/relatorio/enviar?cliente=${r.client.id}&mes=${month}`}>Enviar por e-mail</Link>
                   <form action={regenerateMonthlyLink}><input type="hidden" name="client_id" value={r.client.id} /><input type="hidden" name="mes" value={month} /><SubmitButton className="btn btn-ghost" pendingText="…" confirm="Gerar um novo link? O link atual deixa de funcionar.">Gerar novo link</SubmitButton></form>
                 </>
               ) : (

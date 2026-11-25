@@ -53,6 +53,7 @@ Os pagamentos **não** vêm preenchidos: lance/confirme em *Financeiro*.
 3. Cadastre os e-mails de cada cliente em *Cadastros*.
 4. Em *Relatório → Enviar relatório…* você vê a pré-visualização e confirma. O e-mail leva o PNG em anexo e o
    link da versão para celular; cada envio fica registrado (data, destinatário, status).
+4b. **Relatório mensal (o que vai ao cliente):** *Relatório mensal → Enviar por e-mail* — pré-visualização, escolha dos destinatários e confirmação; vão em anexo todas as páginas em PNG e o link fixo do cliente.
 5. Enquanto `EMAIL_MODE` não for `live`, nada é enviado (modo teste).
 
 ### Envio automático toda segunda (opcional, desligado)
